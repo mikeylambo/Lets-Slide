@@ -15,6 +15,7 @@ function Resolve-Godot {
     }
 
     $candidates = @(
+        "$env:USERPROFILE\Desktop\Godot_v4.7-stable_win64.exe",
         "$env:ProgramFiles\Godot\Godot.exe",
         "$env:ProgramFiles\Godot\Godot_v4.7-stable_win64.exe",
         "$env:LOCALAPPDATA\Programs\Godot\Godot.exe",
@@ -27,23 +28,40 @@ function Resolve-Godot {
     throw 'Godot not found. Set $env:GODOT="C:\full\path\to\Godot.exe" (expected 4.7.x).'
 }
 
+function ConvertTo-NativeArgument([string]$Value) {
+    # ProcessStartInfo.ArgumentList is unavailable in Windows PowerShell 5.1.
+    # Our Godot arguments do not contain embedded quotes, so standard Windows
+    # quoting is sufficient and preserves project paths containing spaces.
+    if ($Value -notmatch '[\s"]') { return $Value }
+    return '"' + ($Value -replace '"', '\"') + '"'
+}
+
 function Invoke-Godot([string]$Godot, [string[]]$GodotArgs) {
-    # Godot's Windows GUI-subsystem executable does not set LASTEXITCODE when
-    # invoked directly from PowerShell, so run and wait through Process.
-    $info = [System.Diagnostics.ProcessStartInfo]::new()
+    # Godot's Windows GUI-subsystem executable does not reliably populate
+    # LASTEXITCODE when invoked directly from Windows PowerShell. Use Process
+    # and wait explicitly. Build the legacy Arguments string so this works on
+    # both Windows PowerShell 5.1 and modern PowerShell.
+    $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $Godot
     $info.UseShellExecute = $false
     $info.RedirectStandardOutput = $true
     $info.RedirectStandardError = $true
+
     if ($GodotArgs -contains '--headless') {
         $pathIndex = [Array]::IndexOf($GodotArgs, '--path')
         $settingsRoot = if ($pathIndex -ge 0) { $GodotArgs[$pathIndex + 1] } else { $env:TEMP }
         $headlessAppData = Join-Path $settingsRoot ('.godot/headless-appdata-{0}' -f [guid]::NewGuid())
         [void](New-Item -ItemType Directory -Path $headlessAppData -Force)
-        $info.Environment['APPDATA'] = $headlessAppData
+        $info.EnvironmentVariables['APPDATA'] = $headlessAppData
     }
-    foreach ($argument in $GodotArgs) { [void]$info.ArgumentList.Add($argument) }
-    $process = [System.Diagnostics.Process]::new()
+
+    $quotedArgs = @()
+    foreach ($argument in $GodotArgs) {
+        $quotedArgs += ConvertTo-NativeArgument ([string]$argument)
+    }
+    $info.Arguments = $quotedArgs -join ' '
+
+    $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $info
     [void]$process.Start()
     $stdout = $process.StandardOutput.ReadToEndAsync()
