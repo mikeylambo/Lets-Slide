@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_30grk"]
+
+[resource]
+script = ExtResource("1_30grk")
+id = "course_02"
+title = "TWO WAYS DOWN"
+subtitle = "Learning the mountain · split"
+course_index = 1
+author_time = 23.17241379310345
+gold_time = 25.026206896551727
+silver_time = 28.270344827586207
+bronze_time = 33.6
+par_score = 2700
+spec = [{
+"bars": 3.0,
+"kind": "straight",
+"slope": 15.0,
+"width": 20.0
+}, {
+"bars": 4.0,
+"kind": "split",
+"slope": 16.0,
+"split_height": 0.8,
+"split_offset": 6.5,
+"width": 20.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 16.0,
+"width": 20.0
+}, {
+"bank": 18.0,
+"bars": 4.0,
+"kind": "bank",
+"slope": 16.0,
+"turn": -34.0,
+"width": 19.0
+}, {
+"bars": 4.0,
+"kind": "split",
+"slope": 17.0,
+"split_height": 1.0,
+"split_offset": 7.0,
+"width": 20.0
+}, {
+"bars": 3.0,
+"kind": "straight",
+"slope": 17.0,
+"width": 21.0
+}]
+total_bars = 20.0
+form = "late_spike"
+signature_moment = "A high split only opens if speed was protected through the preceding bank."

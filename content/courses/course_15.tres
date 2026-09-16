@@ -1,0 +1,183 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_tnhx7"]
+
+[resource]
+script = ExtResource("1_tnhx7")
+id = "course_15"
+title = "SKYFALL DESCENT"
+subtitle = "The aerial chapter · shaft"
+region = "SKYFALL"
+region_index = 2
+course_index = 4
+unlock_medals = 7
+is_descent = true
+author_time = 74.15172413793104
+gold_time = 80.08386206896553
+silver_time = 90.46510344827587
+bronze_time = 107.52000000000001
+par_score = 10944
+spec = [{
+"bars": 3.5,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 1.0,
+"kind": "ramp",
+"launch": 9.0,
+"slope": 16.688399999999998,
+"width": 15.0
+}, {
+"bars": 3.5,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bars": 2.0,
+"kind": "updraft",
+"slope": 18.1864,
+"updraft": 10.0,
+"width": 17.0
+}, {
+"bars": 3.0,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.1944,
+"width": 22.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 1.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.1944,
+"width": 22.0
+}, {
+"bars": 3.5,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "wall",
+"slope": 16.688399999999998,
+"wall": 5.5,
+"width": 18.0
+}, {
+"bars": 1.5,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.1944,
+"width": 22.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 1.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "wall",
+"slope": 16.688399999999998,
+"wall": 5.5,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bars": 2.0,
+"kind": "transfer",
+"slope": 19.983999999999998,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.1944,
+"width": 22.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 1.5,
+"crest": 12.0,
+"kind": "crest",
+"slope": 13.991999999999999,
+"width": 16.0
+}]
+total_bars = 64.0
+form = "sawtooth"

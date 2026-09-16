@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_en1qx"]
+
+[resource]
+script = ExtResource("1_en1qx")
+id = "course_21"
+title = "ROLL OVER"
+subtitle = "Orientation and commitment · corkscrew"
+region = "THE THROAT"
+region_index = 4
+unlock_medals = 18
+author_time = 37.07586206896552
+gold_time = 40.041931034482765
+silver_time = 45.232551724137934
+bronze_time = 53.760000000000005
+par_score = 6624
+spec = [{
+"bars": 2.5,
+"crest": 12.0,
+"kind": "crest",
+"slope": 14.664,
+"width": 16.0
+}, {
+"bars": 1.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 3.5,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bars": 3.5,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bars": 1.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"compression": 10.0,
+"kind": "compression",
+"slope": 15.663599999999999,
+"width": 17.0
+}, {
+"bars": 3.0,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bars": 4.0,
+"kind": "transfer",
+"slope": 21.328,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 3.5,
+"kind": "shaft",
+"slope": 68.0,
+"width": 16.0
+}, {
+"bank": 72.0,
+"bars": 0.5,
+"kind": "bank_to_wall",
+"slope": 21.6612,
+"turn": 45.0,
+"wall": 4.5,
+"width": 17.0
+}, {
+"bank": 20.0,
+"bars": 3.5,
+"kind": "bank",
+"slope": 14.9972,
+"turn": -48.0,
+"width": 16.0
+}, {
+"bars": 0.5,
+"crest": 12.0,
+"kind": "crest",
+"slope": 14.664,
+"width": 16.0
+}]

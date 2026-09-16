@@ -31,3 +31,15 @@ resolve_godot() {
   printf 'Godot not found. Set GODOT=/full/path/to/Godot (expected 4.7.x).\n' >&2
   return 1
 }
+
+# Native Windows Godot does not understand MSYS paths such as /d/project.
+# Keep shell-side paths unchanged for find/test, and normalize only arguments
+# passed to the engine.
+godot_path() {
+  local path="$1"
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "$path"
+  else
+    printf '%s\n' "$path"
+  fi
+}

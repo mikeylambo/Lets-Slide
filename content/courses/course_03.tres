@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_amix7"]
+
+[resource]
+script = ExtResource("1_amix7")
+id = "course_03"
+title = "SURFACE READ"
+subtitle = "Learning the mountain · patch"
+course_index = 2
+author_time = 37.07586206896552
+gold_time = 40.041931034482765
+silver_time = 45.232551724137934
+bronze_time = 53.760000000000005
+par_score = 4320
+spec = [{
+"bars": 4.0,
+"kind": "straight",
+"slope": 15.0,
+"width": 20.0
+}, {
+"bars": 4.0,
+"kind": "patch",
+"slope": 15.0,
+"surface": 2,
+"width": 20.0
+}, {
+"bank": -17.0,
+"bars": 5.0,
+"kind": "bank",
+"slope": 16.0,
+"turn": 30.0,
+"width": 19.0
+}, {
+"bars": 4.0,
+"kind": "patch",
+"slope": 17.0,
+"surface": 5,
+"width": 19.0
+}, {
+"bars": 5.0,
+"bowl": 2.2,
+"kind": "bowl",
+"slope": 17.0,
+"width": 21.0
+}, {
+"bars": 4.0,
+"kind": "patch",
+"slope": 18.0,
+"surface": 3,
+"width": 20.0
+}, {
+"bars": 2.0,
+"crest": 10.0,
+"kind": "crest",
+"slope": 18.0,
+"width": 21.0
+}, {
+"bars": 4.0,
+"kind": "straight",
+"slope": 20.0,
+"width": 22.0
+}]
+form = "sawtooth"
+signature_moment = "Three surface bands turn friction into a readable line choice."

@@ -213,8 +213,9 @@ func _test_track_build() -> void:
 func _test_course_build() -> void:
 	var built = Course01.build()
 	check("course built", built.has("root"))
-	check("course has pickups", built["pickups"].size() > 10, str(built["pickups"].size()))
-	check("course has a mastery collectible", built["mastery"] != null)
+	# Course 01 is the movement tutorial and intentionally omits score/mastery.
+	check("tutorial intentionally has no pickups", built["pickups"].is_empty(), str(built["pickups"].size()))
+	check("tutorial intentionally has no mastery collectible", built["mastery"] == null)
 	check("course has checkpoints", built["checkpoints"].size() >= 4, str(built["checkpoints"].size()))
 	check("course has a finish", built["finish"] != null)
 	check("course length matches 20-bar teaching target", built["length"] > 820.0 and built["length"] < 950.0, str(built["length"]))

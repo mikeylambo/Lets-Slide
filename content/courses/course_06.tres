@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_okkq0"]
+
+[resource]
+script = ExtResource("1_okkq0")
+id = "course_06"
+title = "LOAD"
+subtitle = "Rhythm and speed economy · compression"
+region = "THE COMBS"
+region_index = 1
+unlock_medals = 3
+author_time = 37.07586206896552
+gold_time = 40.041931034482765
+silver_time = 45.232551724137934
+bronze_time = 53.760000000000005
+par_score = 4896
+spec = [{
+"bars": 2.0,
+"crest": 12.0,
+"kind": "crest",
+"slope": 13.656,
+"width": 16.0
+}, {
+"bars": 2.0,
+"kind": "conveyor",
+"slope": 14.2216,
+"surface": 6,
+"width": 16.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "conveyor",
+"slope": 14.2216,
+"surface": 6,
+"width": 16.0
+}, {
+"bars": 1.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "conveyor",
+"slope": 14.2216,
+"surface": 6,
+"width": 16.0
+}, {
+"bars": 2.0,
+"compression": 10.0,
+"kind": "compression",
+"slope": 14.5044,
+"width": 17.0
+}, {
+"bars": 3.0,
+"kind": "conveyor",
+"slope": 14.2216,
+"surface": 6,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 3.5,
+"kind": "chicane",
+"slope": 16.7668,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 2.5,
+"hazards": 3,
+"kind": "hazard",
+"slope": 16.484,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 2.0,
+"kind": "chicane",
+"slope": 16.7668,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 3.0,
+"kind": "conveyor",
+"slope": 14.2216,
+"surface": 6,
+"width": 16.0
+}, {
+"bars": 1.0,
+"crest": 12.0,
+"kind": "crest",
+"slope": 13.656,
+"width": 16.0
+}]

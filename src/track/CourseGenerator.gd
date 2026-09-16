@@ -14,7 +14,7 @@ static func endless(prestige: int) -> CourseData:
 
 static func generate(seed: int, region_index: int, total_bars: float = 32.0, id: String = "generated", title: String = "GENERATED", subtitle: String = "", forced_form: String = "") -> CourseData:
 	var region = clampi(region_index,0,4)
-	var form = forced_form if forced_form != "" else CURVES[abs(seed) % CURVES.size()]
+	var form: String = forced_form if forced_form != "" else str(CURVES[abs(seed) % CURVES.size()])
 	var vocab: Array = CourseCatalog.REGIONS[region]["vocab"]
 	var spec = CourseForm.fill(form, total_bars, vocab, seed, 0.96 + float(region) * 0.06)
 	var validation = GenerationValidator.validate(spec)

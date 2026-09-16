@@ -1,0 +1,94 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_aw7b0"]
+
+[resource]
+script = ExtResource("1_aw7b0")
+id = "course_23"
+title = "NO HORIZON"
+subtitle = "Orientation and commitment · transfer"
+region = "THE THROAT"
+region_index = 4
+course_index = 2
+unlock_medals = 18
+author_time = 37.07586206896552
+gold_time = 40.041931034482765
+silver_time = 45.232551724137934
+bronze_time = 53.760000000000005
+par_score = 6624
+spec = [{
+"bars": 4.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 2.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 1.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 4.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 1.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 4.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 2.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 1.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 4.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 3.0,
+"kind": "drop",
+"slope": 25.0,
+"width": 17.0
+}, {
+"bars": 1.0,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}]
+form = "sawtooth"

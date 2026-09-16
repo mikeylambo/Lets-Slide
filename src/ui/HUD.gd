@@ -173,7 +173,7 @@ func _on_checkpoint(index: int) -> void:
 		if cp_pos != Vector3.INF:
 			var pb_t = _pb_ghost.time_near_position(cp_pos)
 			if pb_t >= 0.0:
-				var d = run.time - pb_t
+				var d: float = float(run.time) - float(pb_t)
 				_delta_label.text = "%s%.2f vs PB" % ["+" if d >= 0.0 else "", d]
 				_delta_label.add_theme_color_override("font_color", UiKit.WARN if d >= 0.0 else UiKit.GOOD)
 				split = "   %s%.2f" % ["+" if d >= 0.0 else "", d]

@@ -26,3 +26,9 @@ function Resolve-Godot {
 
     throw 'Godot not found. Set $env:GODOT="C:\full\path\to\Godot.exe" (expected 4.7.x).'
 }
+
+function Invoke-Godot([string]$Godot, [string[]]$GodotArgs) {
+    # Godot's Windows GUI-subsystem executable does not set LASTEXITCODE when
+    # invoked directly from PowerShell. cmd.exe waits and propagates its code.
+    & cmd.exe /d /c $Godot @GodotArgs
+}

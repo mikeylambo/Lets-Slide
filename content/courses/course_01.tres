@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_e2af0"]
+
+[resource]
+script = ExtResource("1_e2af0")
+title = "FALL LESSON"
+subtitle = "Learning the mountain · crest"
+author_time = 23.17241379310345
+gold_time = 25.026206896551727
+silver_time = 28.270344827586207
+bronze_time = 33.6
+par_score = 0
+mastery_count = 0
+spec = [{
+"bars": 8.0,
+"kind": "straight",
+"slope": 13.0,
+"width": 18.0
+}, {
+"bars": 4.0,
+"crest": 19.0,
+"kind": "crest",
+"slope": 13.0,
+"width": 18.0
+}, {
+"bars": 8.0,
+"kind": "straight",
+"slope": 22.0,
+"width": 20.0
+}]
+total_bars = 20.0
+signature_moment = "The first natural crest teaches that terrain is the jump button."

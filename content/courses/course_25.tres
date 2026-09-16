@@ -1,0 +1,151 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_p17k1"]
+
+[resource]
+script = ExtResource("1_p17k1")
+id = "course_25"
+title = "THROAT DESCENT"
+subtitle = "Orientation and commitment · corkscrew"
+region = "THE THROAT"
+region_index = 4
+course_index = 4
+unlock_medals = 18
+is_descent = true
+author_time = 74.15172413793104
+gold_time = 80.08386206896553
+silver_time = 90.46510344827587
+bronze_time = 107.52000000000001
+par_score = 13248
+spec = [{
+"bars": 2.5,
+"crest": 12.0,
+"kind": "crest",
+"slope": 14.664,
+"width": 16.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bank": -20.0,
+"bars": 2.5,
+"kind": "bank",
+"slope": 14.9972,
+"turn": 48.0,
+"width": 16.0
+}, {
+"bars": 5.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 4.0,
+"kind": "transfer",
+"slope": 21.328,
+"transfer": 6.0,
+"wall": 7.0,
+"width": 18.0
+}, {
+"bars": 3.5,
+"kind": "wall",
+"slope": 17.662799999999997,
+"wall": 5.5,
+"width": 18.0
+}, {
+"bank": 170.0,
+"bars": 3.5,
+"kind": "corkscrew",
+"slope": 22.0,
+"turn": 70.0,
+"width": 16.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 2.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 3.0,
+"kind": "ridge",
+"ridge": 3.8,
+"slope": 20.6616,
+"width": 9.0
+}, {
+"bars": 3.0,
+"kind": "ridge",
+"ridge": 3.8,
+"slope": 20.6616,
+"width": 9.0
+}, {
+"bank": 170.0,
+"bars": 5.0,
+"kind": "corkscrew",
+"slope": 22.0,
+"turn": 70.0,
+"width": 16.0
+}, {
+"bars": 5.0,
+"bowl": 10.0,
+"kind": "fullpipe",
+"pipe": 1.0,
+"slope": 22.0,
+"wall": 9.0,
+"width": 19.0
+}, {
+"bars": 3.5,
+"kind": "wall",
+"slope": 17.662799999999997,
+"wall": 5.5,
+"width": 18.0
+}, {
+"bars": 3.5,
+"kind": "wall",
+"slope": 17.662799999999997,
+"wall": 5.5,
+"width": 18.0
+}, {
+"bank": 170.0,
+"bars": 1.0,
+"kind": "corkscrew",
+"slope": 22.0,
+"turn": 70.0,
+"width": 16.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}, {
+"bars": 2.5,
+"crest": 12.0,
+"kind": "crest",
+"slope": 14.664,
+"width": 16.0
+}, {
+"bars": 2.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.6648,
+"width": 22.0
+}]
+total_bars = 64.0
+form = "double_drop"

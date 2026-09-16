@@ -10,5 +10,5 @@ $Godot = Resolve-Godot
 
 $argsList = @('--headless', '--path', $Root, '--', '--export-courses')
 if ($Force) { $argsList += '--force-export-courses' }
-& $Godot @argsList
+Invoke-Godot $Godot $argsList
 exit $LASTEXITCODE

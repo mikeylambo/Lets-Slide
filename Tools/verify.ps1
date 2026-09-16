@@ -7,7 +7,7 @@ $Godot = Resolve-Godot
 
 function Invoke-Gate([string]$Label, [string[]]$GodotArgs) {
     Write-Host "== $Label =="
-    $output = & $Godot @GodotArgs 2>&1
+    $output = Invoke-Godot $Godot $GodotArgs 2>&1
     $status = $LASTEXITCODE
     $output | ForEach-Object { Write-Host $_ }
     if ($status -ne 0) {

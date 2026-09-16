@@ -1,0 +1,159 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_7ghfi"]
+
+[resource]
+script = ExtResource("1_7ghfi")
+id = "course_20"
+title = "NEEDLE DESCENT"
+subtitle = "Precision under consequence · ridge"
+region = "NEEDLEWORK"
+region_index = 3
+course_index = 4
+unlock_medals = 12
+is_descent = true
+author_time = 74.15172413793104
+gold_time = 80.08386206896553
+silver_time = 90.46510344827587
+bronze_time = 107.52000000000001
+par_score = 12096
+spec = [{
+"bars": 3.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bars": 3.0,
+"kind": "ridge",
+"ridge": 3.8,
+"slope": 20.0232,
+"width": 9.0
+}, {
+"bars": 3.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 4.0,
+"kind": "chicane",
+"slope": 17.8084,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 3.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 4.0,
+"kind": "chicane",
+"slope": 17.8084,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 3.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 1.0,
+"kind": "chicane",
+"slope": 17.8084,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 3.0,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.4296,
+"width": 22.0
+}, {
+"bars": 2.5,
+"kind": "straight",
+"slope": 10.0,
+"width": 18.0
+}, {
+"bars": 2.5,
+"kind": "split",
+"slope": 13.3788,
+"split": 1.0,
+"width": 18.0
+}, {
+"bars": 3.0,
+"kind": "drop",
+"slope": 25.0,
+"width": 17.0
+}, {
+"bars": 2.5,
+"compression": 10.0,
+"kind": "compression",
+"slope": 15.277199999999999,
+"width": 17.0
+}, {
+"bars": 3.0,
+"kind": "drop",
+"slope": 25.0,
+"width": 17.0
+}, {
+"bars": 3.5,
+"kind": "avalanche",
+"slope": 19.3904,
+"surface": 7,
+"width": 18.0
+}, {
+"bars": 2.5,
+"compression": 10.0,
+"kind": "compression",
+"slope": 15.277199999999999,
+"width": 17.0
+}, {
+"bars": 1.5,
+"kind": "drop",
+"slope": 25.0,
+"width": 17.0
+}, {
+"bars": 3.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bank": 18.0,
+"bars": 4.0,
+"kind": "chicane",
+"slope": 17.8084,
+"turn": 58.0,
+"width": 15.0
+}, {
+"bars": 1.0,
+"hazards": 3,
+"kind": "hazard",
+"slope": 17.491999999999997,
+"width": 16.0
+}, {
+"bars": 3.5,
+"kind": "tunnel",
+"slope": 13.0624,
+"tunnel": 1.0,
+"width": 15.0
+}, {
+"bars": 3.0,
+"kind": "drop",
+"slope": 25.0,
+"width": 17.0
+}, {
+"bars": 1.5,
+"bowl": 5.0,
+"kind": "bowl",
+"slope": 12.4296,
+"width": 22.0
+}]
+total_bars = 64.0
+form = "front_loaded"

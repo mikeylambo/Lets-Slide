@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="CourseData" format=3]
+
+[ext_resource type="Script" path="res://src/game/CourseData.gd" id="1_gor31"]
+
+[resource]
+script = ExtResource("1_gor31")
+id = "course_05"
+title = "THRESHOLD DESCENT"
+subtitle = "Learning the mountain · crest"
+course_index = 4
+is_descent = true
+author_time = 74.15172413793104
+gold_time = 80.08386206896553
+silver_time = 90.46510344827587
+bronze_time = 107.52000000000001
+par_score = 8640
+spec = [{
+"bars": 6.0,
+"kind": "straight",
+"slope": 14.0,
+"width": 22.0
+}, {
+"bars": 4.0,
+"crest": 10.0,
+"kind": "crest",
+"slope": 15.0,
+"width": 20.0
+}, {
+"bars": 6.0,
+"kind": "drop",
+"slope": 27.0,
+"width": 20.0
+}, {
+"bars": 7.0,
+"kind": "split",
+"slope": 17.0,
+"split_height": 1.4,
+"split_offset": 7.5,
+"width": 20.0
+}, {
+"bank": 20.0,
+"bars": 7.0,
+"kind": "bank",
+"slope": 17.0,
+"turn": -42.0,
+"width": 19.0
+}, {
+"bars": 5.0,
+"kind": "patch",
+"slope": 18.0,
+"surface": 2,
+"width": 19.0
+}, {
+"bars": 8.0,
+"kind": "tunnel",
+"slope": 19.0,
+"width": 18.0
+}, {
+"bank": -22.0,
+"bars": 7.0,
+"kind": "bank",
+"slope": 18.0,
+"turn": 46.0,
+"width": 18.0
+}, {
+"bars": 6.0,
+"bowl": 4.0,
+"kind": "bowl",
+"slope": 16.0,
+"width": 23.0
+}, {
+"bars": 4.0,
+"crest": 13.0,
+"kind": "crest",
+"slope": 20.0,
+"width": 21.0
+}, {
+"bars": 4.0,
+"kind": "straight",
+"slope": 24.0,
+"width": 24.0
+}]
+total_bars = 64.0
+signature_moment = "Four parallel lines stay visible together before one enormous final release."
