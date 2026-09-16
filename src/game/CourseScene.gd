@@ -43,7 +43,7 @@ func _ready() -> void:
 
 	_ui.layer=8; add_child(_ui); hud=HUD.new(); _ui.add_child(hud)
 	run=RunController.new(); add_child(run); run.run_restarted.connect(_on_run_restarted)
-	run.setup(course,_built,slider,ghost,flow); hud.setup(run,slider,ghost)
+	run.setup(course,_built,slider,ghost,flow); audio.bind_run(run); hud.setup(run,slider,ghost)
 	_juice=JuiceDirector.new(); add_child(_juice); _juice.setup(slider,flow,run)
 	run.run_finished.connect(_on_run_finished)
 	if Game.current_mode==Game.Mode.SURVIVAL: run.respawned.connect(_on_survival_respawn)
