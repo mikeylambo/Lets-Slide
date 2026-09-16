@@ -37,10 +37,19 @@ func _step_ground(s: MotionState, p: MotorParams, inp: MotorInput, dt: float) ->
 	var n = s.floor_normal
 	var v = s.velocity
 
-	# Kill any velocity fighting the surface, then re-seat it in the plane.
-	var into_surface = v.dot(n)
+	# Re-seat velocity into the ground plane without silently deleting momentum.
+	# The old projection shortened the velocity vector every time the floor normal
+	# rotated toward the rider, so rolling terrain could drain speed before gravity
+	# or friction were even evaluated. Terrain should redirect momentum; climbing,
+	# braking, steering and explicit friction are what spend it.
+	var incoming_speed: float = v.length()
+	var into_surface: float = v.dot(n)
 	if into_surface < 0.0:
-		v -= n * into_surface
+		var tangent: Vector3 = v - n * into_surface
+		if tangent.length() > MIN_DIR and incoming_speed > MIN_DIR:
+			v = tangent.normalized() * incoming_speed
+		else:
+			v = tangent
 
 	# Steepest-descent direction on this plane.
 	var down = (Vector3.DOWN - n * Vector3.DOWN.dot(n))
@@ -57,11 +66,15 @@ func _step_ground(s: MotionState, p: MotorParams, inp: MotorInput, dt: float) ->
 	var speed = v.length()
 	var dir = v / speed if speed > MIN_DIR else Vector3.ZERO
 
-	# 2. Friction, direction-aware. Going up costs more than going down, and
-	#    surface class scales the whole budget.
+	# 2. Friction, direction-aware. Gravity already pays the main cost of climbing.
+	# Extra uphill friction therefore fades in only on genuinely steep ascents;
+	# shallow rollers should carry momentum instead of behaving like hidden brakes.
 	if speed > MIN_DIR:
 		var alignment = dir.dot(s.downhill) if slope_sin > MIN_DIR else 0.0
-		var directional = p.downhill_friction if alignment >= 0.0 else p.uphill_friction
+		var directional: float = p.downhill_friction
+		if alignment < 0.0:
+			var steep_uphill: float = smoothstep(0.30, 0.72, clampf(slope_sin, 0.0, 1.0))
+			directional = lerpf(p.flat_friction, p.uphill_friction, steep_uphill)
 		var fric: float = lerpf(p.flat_friction, directional, clampf(slope_sin, 0.0, 1.0))
 		fric *= SurfaceKind.friction_scale(s.surface_class)
 		fric += p.drag_quadratic * speed * speed
