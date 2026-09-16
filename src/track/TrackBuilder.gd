@@ -10,6 +10,7 @@ const RAIL_LIFT = 0.06
 
 var samples: Array[Dictionary] = []
 var segment_ranges: Array[Dictionary] = []
+var parallel_routes: Array[Dictionary] = []
 var total_length = 0.0
 var beat_map: Array[float] = []
 var author_avg_speed: float = 32.0
@@ -24,6 +25,7 @@ func build(spec: Array, start_pos: Vector3 = Vector3.ZERO, start_yaw: float = 0.
 	root.name = "Track"
 	samples.clear()
 	segment_ranges.clear()
+	parallel_routes.clear()
 	beat_map.clear()
 	_tris.clear()
 	_lines = PackedVector3Array()
@@ -58,6 +60,8 @@ func build(spec: Array, start_pos: Vector3 = Vector3.ZERO, start_yaw: float = 0.
 
 func add_parallel_route(from_dist: float, to_dist: float, lateral: float, height: float,
 		width: float, surface: int, name_hint: String = "Route") -> void:
+	parallel_routes.append({"from": from_dist, "to": to_dist, "lateral": lateral,
+		"height": height, "width": width, "name": name_hint})
 	var picked: Array[Dictionary] = []
 	for s in samples:
 		if float(s["dist"]) >= from_dist and float(s["dist"]) <= to_dist:

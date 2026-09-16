@@ -27,6 +27,11 @@ var _reported = false
 var _index = 0
 var _furthest = 0.0
 var _stall_ticks = 0
+var _segment_index = -1
+var _segment_entry_speed = 0.0
+var _last_grounded = false
+var _last_lateral = 0.0
+var _last_vertical = 0.0
 
 func _ready() -> void:
 	print("── SLIDE course probe (autopilot, safe line) ──")
@@ -52,6 +57,8 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_scene = Main.instance.world.get_child(Main.instance.world.get_child_count() - 1)
 	_builder = _scene._built["builder"]
+	_print_segment_sequence(data)
+	_validate_boundaries()
 	_scene.run.run_finished.connect(_on_finish)
 	_scene.run.respawned.connect(_on_respawn)
 	_scene.slider.bonked.connect(func(_s): _bonks += 1)
@@ -61,8 +68,16 @@ func _ready() -> void:
 func _drive(inp: MotorInput, body: SlideBody) -> void:
 	_index = _nearest_index(body.global_position, _index)
 	_furthest = maxf(_furthest, float(_builder.samples[_index]["dist"]))
+	var next_segment := _segment_at(float(_builder.samples[_index]["dist"]))
+	if next_segment != _segment_index:
+		_segment_index = next_segment
+		_segment_entry_speed = body.state.speed
+		var info: Dictionary = _builder.segment_ranges[_segment_index]
+		print("  transition      : segment=%d kind=%s dist=%.0f entry_speed=%.1f grounded=%s" % [
+			_segment_index, info["kind"], float(info["from"]), _segment_entry_speed, body.state.grounded])
 	var ahead: int = mini(_index + int(LOOKAHEAD / TrackBuilder.STEP), _builder.samples.size() - 1)
-	var goal: Vector3 = _builder.samples[ahead]["pos"]
+	var ahead_sample: Dictionary = _builder.samples[ahead]
+	var goal: Vector3 = ahead_sample["pos"] + ahead_sample["r"] * _safe_line_offset(float(ahead_sample["dist"]))
 
 	var to_goal = goal - body.global_position
 	to_goal.y = 0.0
@@ -106,8 +121,12 @@ func _on_respawn() -> void:
 		var i = _scan_all(_fail_pos)
 		var fr: Dictionary = _builder.samples[i]
 		var off: Vector3 = _fail_pos - fr["pos"]
-		print("  respawn %d  last-ground dist=%.0f  lateral=%.1f m  vertical=%.1f m  speed=%.1f" % [
-			_respawns, float(fr["dist"]), off.dot(fr["r"]), off.dot(fr["u"]), _fail_speed])
+		var seg_i := _segment_at(float(fr["dist"]))
+		var info: Dictionary = _builder.segment_ranges[seg_i]
+		print("  failure         : course=%s segment=%d kind=%s into=%.0f speed_entry=%.1f speed_fail=%.1f grounded=%s lateral=%.1f vertical=%.1f checkpoint=%d respawns=%d class=%s" % [
+			_scene.run.course.id, seg_i, info["kind"], float(fr["dist"]) - float(info["from"]),
+			_segment_entry_speed, _fail_speed, _fail_grounded, off.dot(fr["r"]), off.dot(fr["u"]),
+			_scene.run._last_checkpoint, _respawns, _classify_failure(true)])
 
 var _fail_pos = Vector3.ZERO
 var _fail_speed = 0.0
@@ -141,6 +160,11 @@ func _physics_process(delta: float) -> void:
 			_fail_pos = _scene.slider.global_position
 			_fail_speed = s.speed
 			_fail_grounded = s.grounded
+		var frame: Dictionary = _builder.samples[_index]
+		var offset: Vector3 = _scene.slider.global_position - frame["pos"]
+		_last_lateral = offset.dot(frame["r"])
+		_last_vertical = offset.dot(frame["u"])
+		_last_grounded = s.grounded
 	if _t > MAX_SECONDS:
 		_report(false, 0.0, {})
 
@@ -169,7 +193,70 @@ func _report(finished: bool, time: float, result: Dictionary = {}) -> void:
 	print("  respawns        : %d" % _respawns)
 	print("  stall ticks     : %d" % _stall_ticks)
 	print("  bonks           : %d" % _bonks)
+	if not finished:
+		var info: Dictionary = _builder.segment_ranges[_segment_index]
+		print("  failure detail  : course=%s segment=%d kind=%s into=%.0f speed_entry=%.1f speed_fail=%.1f grounded=%s lateral=%.1f vertical=%.1f checkpoint=%d respawns=%d class=%s" % [
+			course.id, _segment_index, info["kind"], _furthest - float(info["from"]), _segment_entry_speed,
+			_scene.slider.state.speed, _last_grounded, _last_lateral, _last_vertical,
+			_scene.run._last_checkpoint, _respawns, _classify_failure(false)])
 	var accepted = finished and _respawns <= 1 and _stall_ticks == 0
 	print("  probe gate      : %s" % ("PASS" if accepted else "REJECT"))
 	print("── probe done ──")
 	get_tree().quit(0 if accepted else 2)
+
+func _segment_at(distance: float) -> int:
+	for i in _builder.segment_ranges.size():
+		if distance <= float(_builder.segment_ranges[i]["to"]) + TrackBuilder.STEP * 0.5:
+			return i
+	return _builder.segment_ranges.size() - 1
+
+func _safe_line_offset(distance: float) -> float:
+	for route in _builder.parallel_routes:
+		var from_d: float = float(route["from"])
+		var to_d: float = float(route["to"])
+		var margin := LOOKAHEAD * 1.5
+		if distance < from_d - margin or distance > to_d + margin:
+			continue
+		var enter_blend := smoothstep(from_d - margin, from_d, distance)
+		var exit_blend := 1.0 - smoothstep(to_d, to_d + margin, distance)
+		var blend: float = minf(enter_blend, exit_blend)
+		var lateral: float = float(route["lateral"])
+		# Stay on the main ribbon's unobstructed side until the elevated branch
+		# and its collision merge are fully behind the rider.
+		return -signf(lateral) * (float(route["width"]) * 0.5 + 0.8) * blend
+	return 0.0
+
+func _print_segment_sequence(course: CourseData) -> void:
+	print("  course          : %s  serialized=%s  bars=%.2f author_speed=%.1f" % [
+		course.id, ResourceLoader.exists("res://content/courses/%s.tres" % course.id), course.total_bars, _builder.author_avg_speed])
+	var sequence: Array[String] = []
+	for i in _builder.segment_ranges.size():
+		var info: Dictionary = _builder.segment_ranges[i]
+		sequence.append("%d:%s[%.0f..%.0f]" % [i, info["kind"], float(info["from"]), float(info["to"])])
+	print("  segments        : %s" % " -> ".join(sequence))
+
+func _validate_boundaries() -> void:
+	for i in range(1, _builder.segment_ranges.size()):
+		var distance: float = float(_builder.segment_ranges[i]["from"])
+		var before: Dictionary = _builder.sample_at(distance - TrackBuilder.STEP)
+		var after: Dictionary = _builder.sample_at(distance + TrackBuilder.STEP)
+		var pos_step: float = before["pos"].distance_to(after["pos"])
+		var tangent_dot: float = Vector3(before["f"]).dot(Vector3(after["f"]))
+		var normal_dot: float = Vector3(before["u"]).dot(Vector3(after["u"]))
+		var previous_width: float = float(_builder.segment_ranges[i - 1]["seg"].get("width", 14.0))
+		var next_width: float = float(_builder.segment_ranges[i]["seg"].get("width", previous_width))
+		var valid := pos_step <= TrackBuilder.STEP * 2.5 and tangent_dot > 0.85 and normal_dot > 0.75
+		print("  boundary %02d    : %s->%s pos=%.2f tangent=%.3f normal=%.3f width=%.1f->%.1f gap=%s valid=%s" % [
+			i, _builder.segment_ranges[i - 1]["kind"], _builder.segment_ranges[i]["kind"], pos_step,
+			tangent_dot, normal_dot, previous_width, next_width, before["gap"] or after["gap"], valid])
+
+func _classify_failure(at_respawn: bool) -> String:
+	if absf(_last_vertical) > 8.0 or (at_respawn and not _fail_grounded):
+		return "fell_through_or_left_geometry"
+	if _scene.slider.state.speed < 1.5 or _stall_ticks > 120:
+		return "stalled"
+	if absf(_last_lateral) > float(_builder.samples[_index].get("width", 18.0)) * 0.5:
+		return "left_intended_line"
+	if _air > 8.0:
+		return "overshot_or_unreachable_landing"
+	return "physically_unreachable"

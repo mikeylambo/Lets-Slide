@@ -20,12 +20,14 @@ static func build(course: CourseData, author_avg_speed: float = 32.0) -> Diction
 	if length > 420.0 and course.id != "course_01":
 		var fast_from = length * 0.18
 		var fast_to = length * 0.34
-		builder.add_parallel_route(fast_from, fast_to, -6.0, 0.7, 6.0, SurfaceKind.VERY_SLIPPERY, "FastLine")
-		_add_route_beacons(builder, props, fast_from, fast_to, -6.0, Color(0.30,0.95,1.0,0.78), 3)
+		if not _authored_route_overlaps(builder, fast_from, fast_to):
+			builder.add_parallel_route(fast_from, fast_to, -6.0, 0.7, 6.0, SurfaceKind.VERY_SLIPPERY, "FastLine")
+			_add_route_beacons(builder, props, fast_from, fast_to, -6.0, Color(0.30,0.95,1.0,0.78), 3)
 		var mastery_from = length * 0.62
 		var mastery_to = length * 0.78
-		builder.add_parallel_route(mastery_from, mastery_to, 8.0, 5.4, 6.2, SurfaceKind.SLIPPERY, "MasteryRoute")
-		_add_route_beacons(builder, props, mastery_from, mastery_to, 8.0, Color(1.0,0.34,0.88,0.90), 5)
+		if not _authored_route_overlaps(builder, mastery_from, mastery_to):
+			builder.add_parallel_route(mastery_from, mastery_to, 8.0, 5.4, 6.2, SurfaceKind.SLIPPERY, "MasteryRoute")
+			_add_route_beacons(builder, props, mastery_from, mastery_to, 8.0, Color(1.0,0.34,0.88,0.90), 5)
 
 	var pickups: Array[Pickup] = []
 	if course.par_score > 0:
@@ -100,3 +102,9 @@ static func _lowest_y(b: TrackBuilder) -> float:
 	var lowest = INF
 	for s in b.samples: lowest = minf(lowest, float(s["pos"].y))
 	return lowest if lowest != INF else 0.0
+
+static func _authored_route_overlaps(b: TrackBuilder, from_d: float, to_d: float) -> bool:
+	for info in b.segment_ranges:
+		if str(info["kind"]) in ["split", "transfer"] and float(info["from"]) < to_d and float(info["to"]) > from_d:
+			return true
+	return false

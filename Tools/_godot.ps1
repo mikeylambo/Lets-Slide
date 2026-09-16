@@ -29,6 +29,28 @@ function Resolve-Godot {
 
 function Invoke-Godot([string]$Godot, [string[]]$GodotArgs) {
     # Godot's Windows GUI-subsystem executable does not set LASTEXITCODE when
-    # invoked directly from PowerShell. cmd.exe waits and propagates its code.
-    & cmd.exe /d /c $Godot @GodotArgs
+    # invoked directly from PowerShell, so run and wait through Process.
+    $info = [System.Diagnostics.ProcessStartInfo]::new()
+    $info.FileName = $Godot
+    $info.UseShellExecute = $false
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    if ($GodotArgs -contains '--headless') {
+        $pathIndex = [Array]::IndexOf($GodotArgs, '--path')
+        $settingsRoot = if ($pathIndex -ge 0) { $GodotArgs[$pathIndex + 1] } else { $env:TEMP }
+        $headlessAppData = Join-Path $settingsRoot ('.godot/headless-appdata-{0}' -f [guid]::NewGuid())
+        [void](New-Item -ItemType Directory -Path $headlessAppData -Force)
+        $info.Environment['APPDATA'] = $headlessAppData
+    }
+    foreach ($argument in $GodotArgs) { [void]$info.ArgumentList.Add($argument) }
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $info
+    [void]$process.Start()
+    $stdout = $process.StandardOutput.ReadToEndAsync()
+    $stderr = $process.StandardError.ReadToEndAsync()
+    $process.WaitForExit()
+    $stdout.Result -split "`r?`n" | Where-Object { $_ -ne '' } | Write-Output
+    $stderr.Result -split "`r?`n" | Where-Object { $_ -ne '' } | Write-Output
+    $global:LASTEXITCODE = $process.ExitCode
+    $process.Dispose()
 }
