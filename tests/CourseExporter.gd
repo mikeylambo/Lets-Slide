@@ -4,10 +4,10 @@ const OUT_DIR := "res://content/courses"
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
-	var failures := 0
+	var failures = 0
 	for course in CourseCatalog.all_courses():
-		var path := "%s/%s.tres" % [OUT_DIR, course.id]
-		var err := ResourceSaver.save(course, path)
+		var path = "%s/%s.tres" % [OUT_DIR, course.id]
+		var err = ResourceSaver.save(course, path)
 		if err != OK:
 			push_error("Failed saving %s: %s" % [path, error_string(err)])
 			failures += 1

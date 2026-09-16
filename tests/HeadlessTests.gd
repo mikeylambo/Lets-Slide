@@ -275,18 +275,18 @@ func _test_campaign_catalog() -> void:
 	check("tempo is 174 BPM", is_equal_approx(Tempo.BPM, 174.0))
 	check("beat grid quantizes half bars", is_equal_approx(Tempo.quantize_bars(2.26), 2.5))
 	check("gap keeps quarter-bar exception", is_equal_approx(float(VerbLibrary.default_segment("gap").get("bars", 0.0)), 0.25))
-	var threshold := CourseCatalog.all_courses()[0]
+	var threshold = CourseCatalog.all_courses()[0]
 	check("course specs are authored in bars", threshold.spec.all(func(seg): return seg.has("bars")))
 	check("Threshold 1 is 20 bars", is_equal_approx(CourseCatalog.spec_bars(threshold.spec), 20.0), str(CourseCatalog.spec_bars(threshold.spec)))
 	check("campaign has five named forms", CourseForm.NAMES.size() == 5)
-	var forms_seen := {}
+	var forms_seen = {}
 	for c in CourseCatalog.all_courses(): forms_seen[c.form] = true
 	check("campaign uses all five forms", forms_seen.size() == 5, str(forms_seen.keys()))
 	check("serialized course directory exists", DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(Courses.COURSE_DIR)))
 	check("serialized course 01 exists", ResourceLoader.exists("res://content/courses/course_01.tres"))
-	var b32 := CourseFactory.build(threshold, 32.0)
-	var b40 := CourseFactory.build(threshold, 40.0)
-	var ratio := float(b40["length"]) / maxf(float(b32["length"]), 0.001)
+	var b32 = CourseFactory.build(threshold, 32.0)
+	var b40 = CourseFactory.build(threshold, 40.0)
+	var ratio = float(b40["length"]) / maxf(float(b32["length"]), 0.001)
 	check("author speed rescales mountain", absf(ratio - 1.25) < 0.035, str(ratio))
 	check("rescale preserves beat map", b32["beat_map"] == b40["beat_map"])
 	b32["root"].free(); b40["root"].free()
