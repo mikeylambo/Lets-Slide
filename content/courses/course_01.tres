@@ -13,18 +13,18 @@ bronze_time = 33.6
 par_score = 0
 mastery_count = 0
 spec = [{
-"bars": 8.0,
+"bars": 9.0,
 "kind": "straight",
 "slope": 13.0,
 "width": 18.0
 }, {
-"bars": 4.0,
-"crest": 19.0,
+"bars": 2.0,
+"crest": 12.0,
 "kind": "crest",
 "slope": 13.0,
 "width": 18.0
 }, {
-"bars": 8.0,
+"bars": 9.0,
 "kind": "straight",
 "slope": 22.0,
 "width": 20.0
