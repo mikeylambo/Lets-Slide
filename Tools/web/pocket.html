@@ -1,0 +1,133 @@
+<title>Let's Slide Pocket Build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Single-look page on purpose: it wears the game's own neon-on-void palette (UiKit.gd). */
+  :root {
+    color-scheme: dark;
+    --void: #090b10;
+    --panel: #10141d;
+    --line: #38f2ff;
+    --accent: #ff59e0;
+    --text: #e6effc;
+    --dim: #8c9eb8;
+    --warn: #ffb84d;
+    --display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  html, body { height: 100%; background: var(--void); color: var(--text); overflow: hidden; }
+  body { font-family: var(--mono); }
+  #canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; outline: none; touch-action: none; background: var(--void); }
+  #gate { position: fixed; inset: 0; display: grid; place-items: center; padding-inline: 16px;
+    background:
+      repeating-linear-gradient(90deg, rgba(56,242,255,.05) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(0deg, rgba(56,242,255,.05) 0 1px, transparent 1px 64px),
+      radial-gradient(120% 80% at 50% 110%, rgba(255,89,224,.16), transparent 60%),
+      var(--void); }
+  #gate[hidden] { display: none; }
+  .card { width: min(440px, 100%); display: grid; gap: 18px; }
+  .eyebrow { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); }
+  h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: clamp(44px, 13vw, 72px); line-height: .9;
+    letter-spacing: -.01em; text-wrap: balance; transform: skewX(-8deg); text-shadow: 3px 0 0 var(--accent), -2px 0 0 rgba(56,242,255,.6); }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .meta b { color: var(--line); font-weight: 600; }
+  #play { font: 700 20px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--void);
+    background: var(--line); border: 0; border-radius: 3px; padding: 18px 20px; cursor: pointer;
+    box-shadow: 0 0 0 1px var(--line), 0 0 32px rgba(56,242,255,.35); }
+  #play:hover { background: #7ff7ff; }
+  #play:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  #play:disabled { background: transparent; color: var(--line); cursor: default; box-shadow: 0 0 0 1px rgba(56,242,255,.4); }
+  .bar { height: 4px; background: rgba(230,239,252,.08); border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--line), var(--accent)); transition: width .15s linear; }
+  #status { min-height: 1.4em; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  #status.err { color: var(--warn); }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 12px; color: var(--dim); border-top: 1px solid rgba(56,242,255,.18); padding-top: 14px; }
+  .keys dt { color: var(--text); }
+  .keys dd { margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<canvas id="canvas" tabindex="0">Your browser can't draw the game canvas.</canvas>
+
+<div id="gate">
+  <main class="card">
+    <div class="eyebrow">Web build &middot; Godot 4.7.2 &middot; WebGL</div>
+    <h1>LET'S SLIDE</h1>
+    <div class="meta"><span><b>174</b> BPM</span><span><b>25</b> courses</span><span>~10 MB download</span></div>
+    <button id="play" type="button">Tap to drop in</button>
+    <div class="bar" aria-hidden="true"><i id="fill"></i></div>
+    <div id="status" role="status">Landscape recommended. Sound starts on tap.</div>
+    <dl class="keys">
+      <dt>Phone</dt><dd>Drag left field to steer &middot; Tuck / Brake buttons</dd>
+      <dt>Keys</dt><dd>A D steer &middot; W S lean &middot; Shift tuck &middot; Space brake &middot; R retry</dd>
+    </dl>
+  </main>
+</div>
+
+<script>
+// Godot's engine binary is ~40 MB; the host caps files at 15 MB and serves
+// only web media types, so the engine ships gzipped as engine.gz.wasm and the
+// game data as game.pck.wasm. This shim maps Godot's requests onto them.
+const WASM_BYTES = 39514754;
+const GZ_BYTES = 10084297;
+const nativeFetch = window.fetch.bind(window);
+const fill = document.getElementById('fill');
+const statusEl = document.getElementById('status');
+const say = (text, err) => { statusEl.textContent = text; statusEl.classList.toggle('err', !!err); };
+const mb = (n) => (n / 1048576).toFixed(1);
+
+window.fetch = async (input, init) => {
+  const url = typeof input === 'string' ? input : input.url;
+  if (/(^|\/)index\.pck(\?|$)/.test(url)) return nativeFetch(url.replace('index.pck', 'game.pck.wasm'), init);
+  if (!/(^|\/)index\.wasm(\?|$)/.test(url)) return nativeFetch(input, init);
+  const res = await nativeFetch(url.replace('index.wasm', 'engine.gz.wasm'), init);
+  if (!res.ok) throw new Error('Engine download failed (HTTP ' + res.status + ')');
+  const reader = res.body.getReader();
+  const chunks = []; let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); got += value.length;
+    fill.style.width = Math.min(90, (got / GZ_BYTES) * 90) + '%';
+    say('Downloading engine ' + mb(got) + ' / ' + mb(GZ_BYTES) + ' MB');
+  }
+  let blob = new Blob(chunks);
+  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  if (head[0] === 0x1f && head[1] === 0x8b) {           // still gzip: inflate here
+    say('Unpacking engine\u2026');
+    blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+  }
+  say('Compiling\u2026');
+  return new Response(blob, { headers: { 'Content-Type': 'application/wasm', 'Content-Length': String(blob.size) } });
+};
+</script>
+<script src="index.js"></script>
+<script>
+const engine = new Engine({
+  args: [], canvasResizePolicy: 2, executable: 'index', experimentalVK: false,
+  fileSizes: { 'index.pck': 350280, 'index.wasm': WASM_BYTES },
+  focusCanvas: true, gdextensionLibs: [], ensureCrossOriginIsolationHeaders: false,
+});
+const play = document.getElementById('play');
+const missing = Engine.getMissingFeatures({ threads: false });
+if (missing.length) {
+  play.disabled = true;
+  say('This browser is missing: ' + missing.join(', ') + '. Try current Chrome or Safari.', true);
+}
+play.addEventListener('click', async () => {
+  play.disabled = true; play.textContent = 'Loading';
+  try { await document.documentElement.requestFullscreen?.(); } catch (_) {}
+  try { await screen.orientation?.lock?.('landscape'); } catch (_) {}
+  try {
+    await engine.startGame({
+      onProgress: (cur, total) => { if (total > WASM_BYTES) fill.style.width = Math.max(90, (cur / total) * 100) + '%'; },
+    });
+    document.getElementById('gate').hidden = true;
+    document.getElementById('canvas').focus();
+  } catch (err) {
+    play.disabled = false; play.textContent = 'Retry';
+    say('Could not start: ' + (err && err.message ? err.message : err), true);
+    console.error(err);
+  }
+});
+</script>
