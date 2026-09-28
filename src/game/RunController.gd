@@ -25,7 +25,12 @@ var course: CourseData
 var slider: SlideBody
 var ghost: Ghost
 var flow: FlowSystem
-var time = 0.0
+var time = 0.0                       ## race time: running physics ticks x tick length
+var ticks = 0                        ## physics ticks since the start signal
+var replay: Replay                   ## inputs of the current run (production model)
+var watching = false                 ## true while a replay drives the rider
+var _record_results_before = true
+var _starting_replay = false
 var score = 0
 var combo = 0
 var pickups_taken = 0
@@ -49,6 +54,7 @@ func setup(course_data: CourseData, built: Dictionary, player: SlideBody, ghost_
 	course = course_data; slider = player; ghost = ghost_node; flow = flow_system; _course_nodes = built
 	_spawn_pos = built["start_position"]; _spawn_yaw = built["start_yaw"]; _kill_y = float(built.get("kill_y",-1000.0))
 	course.pickup_count = built["pickups"].size(); slider.set_spawn(_spawn_pos,_spawn_yaw)
+	slider.input_tap = _on_input_tick
 	slider.bonked.connect(func(_s): bonks += 1)
 	for p in built["pickups"]: p.collected.connect(_on_pickup)
 	for cp in built["checkpoints"]: cp.triggered.connect(_on_checkpoint)
@@ -58,13 +64,15 @@ func setup(course_data: CourseData, built: Dictionary, player: SlideBody, ghost_
 	begin(false)
 
 func begin(fast: bool = false) -> void:
-	time=0.0; score=0; combo=0; pickups_taken=0; mastery_taken=0; distance=0.0; bonks=0; respawns=0; _top_speed=0.0
+	if watching and not _starting_replay: stop_replay()   # retry takes control back
+	time=0.0; ticks=0; score=0; combo=0; pickups_taken=0; mastery_taken=0; distance=0.0; bonks=0; respawns=0; _top_speed=0.0
 	_momentum_sum=0.0; _momentum_samples=0; _stuck_timer=0.0; _chain_timer=0.0; _last_checkpoint=-1; _countdown=retry_countdown if fast else COUNTDOWN_TIME
 	for p in _course_nodes["pickups"]: p.restore()
 	for cp in _course_nodes["checkpoints"]: cp.reset()
 	_course_nodes["finish"].reset()
 	slider.respawn(_spawn_pos,_spawn_yaw); slider.control_enabled=false
 	if flow: flow.reset()
+	replay = Replay.begin_for(course.id, slider.params)
 	_set_state(State.COUNTDOWN); score_changed.emit(score,combo)
 	if ghost:
 		var loaded = ghost.load_path(ghost_path) if ghost_path != "" else ghost.load_from(course.id)
@@ -90,19 +98,51 @@ func pause_run() -> void:
 func resume_run() -> void:
 	if state==State.PAUSED: _set_state(State.RUNNING); slider.control_enabled=true
 
-func _process(delta: float) -> void:
+## The race clock is the physics clock. Counting ticks (not frames) makes a
+## time identical on every machine and frame rate, and makes runs replayable:
+## the start signal, every input and the finish all land on exact ticks.
+func _physics_process(_delta: float) -> void:
+	var step = 1.0 / float(Engine.physics_ticks_per_second)   # immune to time_scale
 	match state:
 		State.COUNTDOWN:
-			_countdown -= delta
-			if _countdown <= 0.0:
+			_countdown -= step
+			if _countdown <= 0.000001:
 				slider.control_enabled=true; _set_state(State.RUNNING)
 				if ghost: ghost.start_recording()
-		State.RUNNING: _tick_running(delta)
+		State.RUNNING: _tick_running(step)
+
+func _process(delta: float) -> void:
 	# The ghost runs on race time, not countdown time, or it leaves early.
 	if ghost and ghost.playing and state == State.RUNNING: ghost.advance(delta)
 
+## SlideBody reports the exact input packet each tick it had control.
+func _on_input_tick(inp: MotorInput) -> void:
+	if state == State.RUNNING and replay: replay.push(inp)
+
+## Re-runs a recorded replay through the real motor. Returns false when the
+## replay belongs to another course.
+func play_replay(r: Replay) -> bool:
+	if r == null or r.course_id != course.id: return false
+	var cursor = [0]
+	slider.params.from_dict(r.params)
+	slider.external_input = func(inp: MotorInput, _body): r.read(cursor[0], inp); cursor[0] += 1
+	if not watching: _record_results_before = record_results
+	watching = true
+	record_results = false             # watching a run never touches records
+	_starting_replay = true
+	begin(false)
+	_starting_replay = false
+	return true
+
+func stop_replay() -> void:
+	slider.external_input = Callable()
+	if watching:
+		watching = false
+		record_results = _record_results_before
+
 func _tick_running(delta: float) -> void:
-	time += delta
+	ticks += 1
+	time = float(ticks) * delta
 	var s = slider.state; distance += s.speed*delta; _top_speed=maxf(_top_speed,s.speed)
 	_momentum_sum += clampf(s.speed/maxf(slider.params.max_speed,1.0),0.0,1.0); _momentum_samples += 1
 	if _chain_timer > 0.0:
@@ -146,6 +186,7 @@ func fail(reason: String) -> void:
 
 func finish_run(finished: bool, fail_reason: String = "") -> void:
 	_set_state(State.FINISHED); slider.control_enabled=false
+	if replay: replay.finish(ticks, finished, Engine.physics_ticks_per_second)
 	if ghost: ghost.stop_recording()
 	var avg_momentum = 0.0 if _momentum_samples==0 else _momentum_sum/float(_momentum_samples)
 	avg_momentum=clampf(avg_momentum-0.03*float(bonks),0.0,1.0)
@@ -166,6 +207,8 @@ func finish_run(finished: bool, fail_reason: String = "") -> void:
 		# mastery grade; Time Trial/Daily are time, Score Attack is score.
 		result["rank"] = ""
 		result["grade_breakdown"] = {}
+	result["watched"] = watching
+	if replay and replay.valid() and not watching: result["replay"] = replay
 	if not record_results:
 		result["previous_best"] = 0.0
 		result["beaten"] = {}
@@ -177,6 +220,7 @@ func finish_run(finished: bool, fail_reason: String = "") -> void:
 	result["beaten"] = beaten
 	if ghost and finished and beaten.get("time", false):
 		ghost.save(course.id)
+		if replay and replay.valid(): replay.save(Replay.pb_path(course.id))
 	if finished:
 		ShellBridge.submit_leaderboard(course.id, result)
 	run_finished.emit(result)

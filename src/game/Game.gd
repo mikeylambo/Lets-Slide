@@ -11,6 +11,10 @@ const PRESET_PATH = "user://presets.json"
 enum Mode { CAMPAIGN, TIME_TRIAL, SCORE_ATTACK, SURVIVAL, DAILY, ENDLESS }
 
 var current_mode: int = Mode.CAMPAIGN
+## Developer tools (Movement Lab, SM64 reference model, course inspector) exist
+## only in debug builds. The reference model uses the original game's constants
+## as a private tuning comparison; it never ships.
+var dev_tools = OS.is_debug_build()
 var profile = {
 	"name": "SLIDER",
 	"total_runs": 0,
@@ -31,6 +35,7 @@ var settings = {
 	"fov_scale": 1.0,
 	"show_ghost": true,
 	"show_telemetry": false,
+	"show_inputs": false,
 	"invert_steer": false,
 	"units_metric": true,
 	"touch_controls": false,
@@ -239,6 +244,7 @@ func _factory_presets() -> Dictionary:
 	out["High Grip"] = {"motor": grip.to_dict(), "camera": cam.to_dict()}
 	var loose = base.duplicate_params(); loose.carve_grip = 0.45; loose.steering_strength = 125.0; loose.momentum_retention = 0.995; loose.downhill_friction = 0.28; loose.air_steering = 105.0
 	out["Loose / Drift"] = {"motor": loose.to_dict(), "camera": cam.to_dict()}
-	var ref = base.duplicate_params(); ref.model = MotorParams.Model.SM64_REFERENCE; ref.reset_reference_constants()
-	out["SM64 Reference"] = {"motor": ref.to_dict(), "camera": cam.to_dict()}
+	if dev_tools:
+		var ref = base.duplicate_params(); ref.model = MotorParams.Model.SM64_REFERENCE; ref.reset_reference_constants()
+		out["SM64 Reference"] = {"motor": ref.to_dict(), "camera": cam.to_dict()}
 	return out
