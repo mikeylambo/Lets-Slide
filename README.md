@@ -18,6 +18,40 @@ Tools/verify-full.sh
 The shell scripts auto-detect `godot`, `godot4`, and the standard macOS Godot.app paths.
 Your local `Tools/verify.sh` remains the primary gate.
 
+## Playtest Harness (dev-only feel tuning, no editor)
+
+Double-click **`Playtest.cmd`** (Windows) or **`Playtest.command`** (macOS), or run
+`Tools/playtest.sh [course_id] [--preset="Name"] [--b="Name"] [--blind]`.
+It imports/compiles the project, launches straight into Course 01, and opens
+`playtests/LATEST.md` when you quit. Paste that file back to Claude.
+
+| Action | Keyboard | Pad |
+|---|---|---|
+| Live tuning panel (every MotorParams field) | F1 | RB |
+| Readability kit (grid, FOV kick, speed lines, wind) | F2 | L3 |
+| 174 BPM click (bar-accented, locked to run start) | M | — |
+| Instant A/B preset swap, mid-run | Tab | LB |
+| Blind A/B (slots become X/Y, values hidden) | B | — |
+| Instant retry (~100 ms to control) | R | Y |
+| Drop note marker (time, position, speed, course bar) | N | Select |
+| Rate run at finish | 1–5 | D-pad ←→ + A |
+| HUD telemetry | T | — |
+
+Panel on a pad: D-pad ↑↓ moves between rows, ←→ nudges by 1/50 of the range, A resets
+a slider to its saved value. Changing `author_avg_speed` rebuilds the course.
+
+- Presets: `user://presets/*.json` (seeded from the built-in presets on first run).
+  Ghosts of the best run per preset go in `user://presets/ghosts/`.
+- Telemetry: `user://playtests/<session>/run_NNN/{telemetry.csv, preset.json, run.json}`.
+  The CSV has one row per physics tick: time, position, speed, grounded, surface, course
+  bar, inputs, and events (pop/land/bonk/marker/swap/param).
+- Handoff: `summary.md` per session (best times per preset, markers with bar numbers,
+  ratings, tuning deltas vs saved presets). It's mirrored to `playtests/` (git-ignored).
+- Isolation: the harness lives in `src/harness/`. `Main.gd` loads it by path only when
+  `OS.is_debug_build()` is true, and every export preset excludes the folder. Harness runs
+  never write profile records, leaderboards, or PB ghosts. `Tools/verify.sh` gates it
+  with `--harness-test`.
+
 ## Controls
 
 | Action | Keyboard | Pad |

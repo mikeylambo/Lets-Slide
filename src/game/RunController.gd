@@ -16,6 +16,11 @@ const RESPAWN_SPEED = 13.0
 const CHAIN_WINDOW = 2.0
 
 var state: int = State.READY
+## Tooling hooks. Gameplay leaves the defaults; the dev playtest harness uses
+## them for sub-300 ms retries and sandboxed runs that never touch records.
+var retry_countdown = 0.55
+var record_results = true
+var ghost_path = ""                  ## empty = the per-course PB ghost
 var course: CourseData
 var slider: SlideBody
 var ghost: Ghost
@@ -54,7 +59,7 @@ func setup(course_data: CourseData, built: Dictionary, player: SlideBody, ghost_
 
 func begin(fast: bool = false) -> void:
 	time=0.0; score=0; combo=0; pickups_taken=0; mastery_taken=0; distance=0.0; bonks=0; respawns=0; _top_speed=0.0
-	_momentum_sum=0.0; _momentum_samples=0; _stuck_timer=0.0; _chain_timer=0.0; _last_checkpoint=-1; _countdown=0.55 if fast else COUNTDOWN_TIME
+	_momentum_sum=0.0; _momentum_samples=0; _stuck_timer=0.0; _chain_timer=0.0; _last_checkpoint=-1; _countdown=retry_countdown if fast else COUNTDOWN_TIME
 	for p in _course_nodes["pickups"]: p.restore()
 	for cp in _course_nodes["checkpoints"]: cp.reset()
 	_course_nodes["finish"].reset()
@@ -62,7 +67,8 @@ func begin(fast: bool = false) -> void:
 	if flow: flow.reset()
 	_set_state(State.COUNTDOWN); score_changed.emit(score,combo)
 	if ghost:
-		if bool(Game.settings.get("show_ghost",true)) and ghost.load_from(course.id): ghost.start_playback()
+		var loaded = ghost.load_path(ghost_path) if ghost_path != "" else ghost.load_from(course.id)
+		if bool(Game.settings.get("show_ghost",true)) and loaded: ghost.start_playback()
 		else: ghost.stop_playback()
 	run_restarted.emit(fast)
 
@@ -92,7 +98,8 @@ func _process(delta: float) -> void:
 				slider.control_enabled=true; _set_state(State.RUNNING)
 				if ghost: ghost.start_recording()
 		State.RUNNING: _tick_running(delta)
-	if ghost and ghost.playing: ghost.advance(delta)
+	# The ghost runs on race time, not countdown time, or it leaves early.
+	if ghost and ghost.playing and state == State.RUNNING: ghost.advance(delta)
 
 func _tick_running(delta: float) -> void:
 	time += delta
@@ -159,6 +166,11 @@ func finish_run(finished: bool, fail_reason: String = "") -> void:
 		# mastery grade; Time Trial/Daily are time, Score Attack is score.
 		result["rank"] = ""
 		result["grade_breakdown"] = {}
+	if not record_results:
+		result["previous_best"] = 0.0
+		result["beaten"] = {}
+		run_finished.emit(result)
+		return
 	var previous_best = float(Game.record_for(course.id)["best_time"])
 	result["previous_best"] = previous_best
 	var beaten = Game.submit_result(course.id, result)
