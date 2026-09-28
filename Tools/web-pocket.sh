@@ -27,7 +27,7 @@ fi
 RAW="$(mktemp -d)"
 "$GODOT_BIN" --headless --path "$ROOT" --export-release "Web" "$RAW/index.html" >/dev/null
 mkdir -p "$OUT"
-cp "$RAW/index.js" "$RAW/index.audio.worklet.js" "$RAW/index.audio.position.worklet.js" "$OUT/"
+cp "$HERE/web/fflate.js" "$RAW/index.js" "$RAW/index.audio.worklet.js" "$RAW/index.audio.position.worklet.js" "$OUT/"
 cp "$RAW/index.pck" "$OUT/game.pck.wasm"
 gzip -9 -c "$RAW/index.wasm" > "$OUT/engine.gz.wasm"
 WASM=$(stat -c%s "$RAW/index.wasm" 2>/dev/null || stat -f%z "$RAW/index.wasm")

@@ -75,6 +75,11 @@ const fill = document.getElementById('fill');
 const statusEl = document.getElementById('status');
 const say = (text, err) => { statusEl.textContent = text; statusEl.classList.toggle('err', !!err); };
 const mb = (n) => (n / 1048576).toFixed(1);
+// Surface any failure on the page: there is no console on a phone.
+const fail = (e) => { const b = document.getElementById('play'); b.disabled = false; b.textContent = 'Retry';
+  say('Could not start: ' + ((e && (e.message || e.reason && e.reason.message)) || e), true); };
+window.addEventListener('error', (e) => fail(e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => fail(e.reason));
 
 window.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input.url;
@@ -91,16 +96,20 @@ window.fetch = async (input, init) => {
     fill.style.width = Math.min(90, (got / GZ_BYTES) * 90) + '%';
     say('Downloading engine ' + mb(got) + ' / ' + mb(GZ_BYTES) + ' MB');
   }
-  let blob = new Blob(chunks);
-  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
-  if (head[0] === 0x1f && head[1] === 0x8b) {           // still gzip: inflate here
+  let bytes = new Uint8Array(got), off = 0;
+  for (const c of chunks) { bytes.set(c, off); off += c.length; }
+  chunks.length = 0;
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {         // still gzip: inflate here
     say('Unpacking engine\u2026');
-    blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+    await new Promise((r) => setTimeout(r, 30));         // let the status paint first
+    // fflate instead of DecompressionStream: the native stream stalls on some iOS builds.
+    bytes = fflate.gunzipSync(bytes, { out: new Uint8Array(WASM_BYTES) });
   }
   say('Compiling\u2026');
-  return new Response(blob, { headers: { 'Content-Type': 'application/wasm', 'Content-Length': String(blob.size) } });
+  return new Response(bytes, { headers: { 'Content-Type': 'application/wasm', 'Content-Length': String(bytes.length) } });
 };
 </script>
+<script src="fflate.js"></script>
 <script src="index.js"></script>
 <script>
 const engine = new Engine({
@@ -118,13 +127,20 @@ play.addEventListener('click', async () => {
   play.disabled = true; play.textContent = 'Loading';
   try { await document.documentElement.requestFullscreen?.(); } catch (_) {}
   try { await screen.orientation?.lock?.('landscape'); } catch (_) {}
+  let last = '', still = 0;
+  const watch = setInterval(() => {
+    if (statusEl.textContent === last) { still += 5; if (still >= 20 && !statusEl.classList.contains('err')) say(last.replace(/ \(.*\)$/, '') + ' (' + still + ' s, still working)'); }
+    else { last = statusEl.textContent; still = 0; }
+  }, 5000);
   try {
     await engine.startGame({
       onProgress: (cur, total) => { if (total > WASM_BYTES) fill.style.width = Math.max(90, (cur / total) * 100) + '%'; },
     });
+    clearInterval(watch);
     document.getElementById('gate').hidden = true;
     document.getElementById('canvas').focus();
   } catch (err) {
+    clearInterval(watch);
     play.disabled = false; play.textContent = 'Retry';
     say('Could not start: ' + (err && err.message ? err.message : err), true);
     console.error(err);
