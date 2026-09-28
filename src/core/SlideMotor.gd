@@ -14,6 +14,7 @@ const MIN_DIR = 0.0001
 
 func step(s: MotionState, p: MotorParams, inp: MotorInput, dt: float) -> void:
 	s.entry_speed = s.velocity.length()
+	s.sim_time += dt
 	s.tuck = move_toward(s.tuck, 1.0 if inp.tuck else 0.0, dt * 6.0)
 
 	if s.bonk_timer > 0.0:
@@ -134,7 +135,7 @@ func _step_ground(s: MotionState, p: MotorParams, inp: MotorInput, dt: float) ->
 	v = dir * speed
 	if s.surface_class == SurfaceKind.AVALANCHE and dir.length() > MIN_DIR:
 		var avalanche_side = dir.cross(n).normalized()
-		v += avalanche_side * sin(Time.get_ticks_msec() * 0.0023) * p.avalanche_drift * dt
+		v += avalanche_side * sin(s.sim_time * 2.3) * p.avalanche_drift * dt
 	# Let gravity keep pressing into the surface so we hug convex terrain
 	# instead of ballooning off every crest; the driver's snap does the rest.
 	v += n * -absf(p.gravity) * dt * 0.15

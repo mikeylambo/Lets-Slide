@@ -29,6 +29,7 @@ func _ready() -> void:
 	_test_campaign_catalog()
 	_test_generator_contract()
 	_test_weight_transfer_no_flat_pump()
+	_test_release_hides_dev_tools()
 
 	print("── %d checks, %d failures ──" % [checks, failures])
 	get_tree().quit(1 if failures > 0 else 0)
@@ -334,3 +335,19 @@ func _test_weight_transfer_no_flat_pump() -> void:
 		motor.step(neutral, p, input_neutral, 1.0 / 120.0)
 		motor.step(pumping, p, input_pump, 1.0 / 120.0)
 	check("weight transfer cannot pump flat terrain", absf(neutral.speed - pumping.speed) < 0.001, "%f vs %f" % [neutral.speed, pumping.speed])
+
+func _test_release_hides_dev_tools() -> void:
+	## The reference model uses the original game's constants and must never be
+	## reachable in a shipped build.
+	var was = Game.dev_tools
+	Game.dev_tools = false
+	var menu = MainMenu.new()
+	add_child(menu)
+	var labels = []
+	for n in menu.find_children("*", "Button", true, false):
+		labels.append(n.text)
+	check("release main menu hides the Movement Lab", not labels.has("MOVEMENT LAB"), str(labels))
+	check("release factory presets omit the reference model", not Game._factory_presets().has("SM64 Reference"))
+	menu.free()
+	Game.dev_tools = was
+	check("debug builds keep dev tools", Game.dev_tools == OS.is_debug_build())

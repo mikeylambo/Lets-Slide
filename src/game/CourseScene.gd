@@ -62,10 +62,10 @@ func _process(delta:float)->void:
 func _unhandled_input(event:InputEvent)->void:
 	if event.is_action_pressed("pause_menu"): _toggle_pause(); get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("retry") and run.state!=RunController.State.FINISHED: run.retry(); get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("toggle_model"): slider.toggle_model(); get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("toggle_lab"): Main.instance.open_lab(); get_viewport().set_input_as_handled()
+	elif Game.dev_tools and event.is_action_pressed("toggle_model"): slider.toggle_model(); get_viewport().set_input_as_handled()
+	elif Game.dev_tools and event.is_action_pressed("toggle_lab"): Main.instance.open_lab(); get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and event.keycode==KEY_F2: hud.toggle_telemetry(); get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode==KEY_F4: _toggle_inspector(); get_viewport().set_input_as_handled()
+	elif Game.dev_tools and event is InputEventKey and event.pressed and event.keycode==KEY_F4: _toggle_inspector(); get_viewport().set_input_as_handled()
 
 func _on_run_restarted(fast: bool = false)->void:
 	if camera:
@@ -95,7 +95,12 @@ func _on_run_finished(result: Dictionary) -> void:
 	_results.retry_requested.connect(_on_retry)
 	_results.exit_requested.connect(func(): Main.instance.show_mode_select())
 	_results.next_requested.connect(func(): Main.instance.next_mode_course())
+	_results.watch_requested.connect(_on_watch)
 	_ui.add_child(_results)
+
+func _on_watch(r: Replay)->void:
+	if _results and is_instance_valid(_results): _results.queue_free(); _results=null
+	run.play_replay(r)
 
 func _on_retry()->void:
 	if _results and is_instance_valid(_results): _results.queue_free(); _results=null

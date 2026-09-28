@@ -28,6 +28,7 @@ func _ready() -> void:
 	col.add_child(_slider("FOV scale", "fov_scale", 0.80, 1.20, 0.02))
 	col.add_child(_toggle("Show personal-best ghost", "show_ghost"))
 	col.add_child(_toggle("Show telemetry in run", "show_telemetry"))
+	col.add_child(_toggle("Show input display (speedrun overlay)", "show_inputs"))
 	col.add_child(_toggle("Invert steering", "invert_steer"))
 	col.add_child(_toggle("Metric units (km/h)", "units_metric"))
 	col.add_child(_toggle("Show touch controls", "touch_controls"))
@@ -36,16 +37,18 @@ func _ready() -> void:
 
 	col.add_child(UiKit.spacer(20))
 	col.add_child(UiKit.label("CONTROLS", UiKit.H3, UiKit.LINE))
-	for line in [
+	var lines = [
 		"Steer            A / D  ·  Left stick",
 		"Lean / extend    W / S  ·  Left stick Y",
 		"Tuck             Shift  ·  X / Square",
 		"Brake            Space  ·  B / Circle",
 		"Retry            R  ·  Y / Triangle",
 		"Pause            Esc  ·  Start",
-		"Movement Lab     F1        Telemetry      F2",
-		"Course Inspector F4        Swap model     configured key",
-	]:
+		"Telemetry        F2",
+	]
+	if Game.dev_tools:
+		lines.append("Dev: Movement Lab F1 · Swap reference model F3 · Course Inspector F4")
+	for line in lines:
 		col.add_child(UiKit.label(line, UiKit.BODY, UiKit.TEXT_DIM))
 
 	col.add_child(UiKit.spacer(20))

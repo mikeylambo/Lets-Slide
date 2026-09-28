@@ -34,6 +34,9 @@ func _ready() -> void:
 	if "--export-courses" in args:
 		add_child(load("res://tests/CourseExporter.gd").new())
 		return
+	if "--replay-test" in args:
+		add_child(load("res://tests/ReplayTests.gd").new())
+		return
 	if "--apply-medals" in args:
 		add_child(load("res://tests/MedalWriter.gd").new())
 		return
@@ -43,7 +46,7 @@ func _ready() -> void:
 			add_child(load(runner).new())
 			return
 		push_warning("Playtest harness requires a debug build from source; opening menu.")
-	if "--lab" in args: open_lab()
+	if "--lab" in args and Game.dev_tools: open_lab()
 	else: show_menu()
 
 func show_menu() -> void: _clear_world(); _set_screen(MainMenu.new())
@@ -85,6 +88,7 @@ func next_mode_course() -> void:
 		_: show_course_select()
 
 func open_lab() -> void:
+	if not Game.dev_tools: return
 	_set_screen(null); _clear_world(); var lab = MovementLab.new(); _world_child = lab; world.add_child(lab)
 func quit_to_menu() -> void: get_tree().paused = false; show_menu()
 

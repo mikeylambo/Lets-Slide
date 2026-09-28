@@ -25,6 +25,7 @@ var active_motor: RefCounted
 var control_enabled = true
 var camera_basis = Basis.IDENTITY   ## set by the camera each frame
 var external_input = Callable()     ## optional: drives input instead of the device
+var input_tap = Callable()          ## optional: sees the final input packet every controlled tick
 
 var _visual: Node3D
 var _board: MeshInstance3D
@@ -165,13 +166,24 @@ func _gather_input() -> void:
 	if not control_enabled:
 		input.clear()
 		return
-	# An external controller (autopilot probe, future replay or AI) can drive
-	# the same input packet the player uses, so it exercises the real motor.
+	# An external controller (autopilot probe, replay or AI) can drive the same
+	# input packet the player uses, so it exercises the real motor.
 	if external_input.is_valid():
 		input.clear()
 		external_input.call(input, self)
-		return
+	else:
+		_gather_device_input()
+	# Quantise analogue axes to the replay format so a recorded run re-simulates
+	# bit-for-bit. 1/127 steps are far below what a stick or thumb can resolve.
+	input.steer = Replay.quantize(input.steer)
+	input.lean = Replay.quantize(input.lean)
+	if input_tap.is_valid():
+		input_tap.call(input)
+
+func _gather_device_input() -> void:
 	var raw = Input.get_vector("steer_left", "steer_right", "lean_forward", "lean_back")
+	if bool(Game.settings.get("invert_steer", false)):
+		raw.x = -raw.x
 	input.steer = raw.x
 	input.lean = -raw.y
 	var fwd = -camera_basis.z

@@ -10,7 +10,8 @@ func _ready() -> void:
 	var buttons = VBoxContainer.new(); buttons.add_theme_constant_override("separation",8); col.add_child(buttons)
 	var play = UiKit.button("PLAY", true); play.pressed.connect(func(): Main.instance.show_mode_select()); buttons.add_child(play)
 	var daily = UiKit.button("DAILY DESCENT"); daily.pressed.connect(func(): Game.set_mode(Game.Mode.DAILY); Main.instance.start_daily()); buttons.add_child(daily)
-	var lab = UiKit.button("MOVEMENT LAB"); lab.pressed.connect(func(): Main.instance.open_lab()); buttons.add_child(lab)
+	if Game.dev_tools:
+		var lab = UiKit.button("MOVEMENT LAB"); lab.pressed.connect(func(): Main.instance.open_lab()); buttons.add_child(lab)
 	var records = UiKit.button("RECORDS"); records.pressed.connect(func(): Main.instance.show_records()); buttons.add_child(records)
 	var boards = UiKit.button("LEADERBOARDS"); boards.pressed.connect(func(): Main.instance.show_leaderboards()); buttons.add_child(boards)
 	var rider = UiKit.button("RIDER"); rider.pressed.connect(func(): Main.instance.show_cosmetics()); buttons.add_child(rider)

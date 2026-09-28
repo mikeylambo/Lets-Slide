@@ -21,6 +21,7 @@ var _model_badge: Label
 var _flow_label: Label
 var _mode_label: Label
 var _telemetry: TelemetryPanel
+var _inputs: InputDisplay
 var _flash_timer = 0.0
 var _best_time = 0.0
 var _pb_ghost: Ghost
@@ -28,6 +29,7 @@ var _pb_ghost: Ghost
 func setup(controller: RunController, player: SlideBody, pb_ghost: Ghost = null) -> void:
 	run = controller
 	slider = player
+	if _inputs: _inputs.slider = player
 	_pb_ghost = pb_ghost
 	_best_time = float(Game.record_for(run.course.id)["best_time"])
 	run.score_changed.connect(_on_score)
@@ -113,6 +115,15 @@ func _ready() -> void:
 	_telemetry.visible = bool(Game.settings.get("show_telemetry", false))
 	add_child(_telemetry)
 
+	# --- bottom centre: input display (speedrun overlay) --------------------
+	_inputs = InputDisplay.new()
+	_inputs.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_inputs.position = Vector2(-InputDisplay.W * 0.5, -InputDisplay.H - 28)
+	_inputs.slider = slider
+	_inputs.visible = bool(Game.settings.get("show_inputs", false))
+	add_child(_inputs)
+	Game.settings_changed.connect(func(): if _inputs: _inputs.visible = bool(Game.settings.get("show_inputs", false)))
+
 func _process(delta: float) -> void:
 	if run == null or slider == null:
 		return
@@ -141,7 +152,9 @@ func _process(delta: float) -> void:
 		if target.is_empty(): _target_label.text = "AUTHOR PACE"
 		else: _target_label.text = "%s  %s" % [target["name"], RunController.format_time(target["time"])]
 
-	if slider.params.model == MotorParams.Model.SM64_REFERENCE:
+	if run.watching:
+		_model_badge.text = "▶ REPLAY"
+	elif slider.params.model == MotorParams.Model.SM64_REFERENCE:
 		_model_badge.text = "SM64 REFERENCE  %d Hz" % Engine.physics_ticks_per_second
 	else:
 		_model_badge.text = ""

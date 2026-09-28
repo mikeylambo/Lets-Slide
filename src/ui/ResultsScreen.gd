@@ -10,6 +10,7 @@ extends Control
 signal retry_requested()
 signal exit_requested()
 signal next_requested()
+signal watch_requested(replay: Replay)
 
 var result = {}
 var course: CourseData
@@ -124,6 +125,20 @@ func _ready() -> void:
 		var next = UiKit.button("NEXT DESCENT", true)
 		next.pressed.connect(func(): next_requested.emit())
 		actions.add_child(next)
+
+	var rep = result.get("replay") as Replay
+	if rep:
+		var watch = UiKit.button("WATCH RUN")
+		watch.custom_minimum_size.x = 200
+		watch.pressed.connect(func(): watch_requested.emit(rep))
+		actions.add_child(watch)
+		var share = UiKit.button("COPY RUN CODE")
+		share.custom_minimum_size.x = 230
+		share.tooltip_text = "Copies this run as text. Anyone with the course can watch it or race it."
+		share.pressed.connect(func():
+			DisplayServer.clipboard_set(rep.to_code())
+			share.text = "CODE COPIED")
+		actions.add_child(share)
 
 	var back = UiKit.button("COURSE SELECT")
 	back.pressed.connect(func(): exit_requested.emit())
