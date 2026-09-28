@@ -4,3 +4,4 @@ export_presets.cfg
 
 # Playtest harness session handoffs (raw data lives in user://playtests)
 playtests/
+build/
