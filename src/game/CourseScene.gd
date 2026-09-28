@@ -2,6 +2,9 @@ class_name CourseScene
 extends Node3D
 
 var course: CourseData
+## Tooling hooks (dev playtest harness). Gameplay leaves both at defaults.
+var params_override: MotorParams = null
+var show_results = true
 var slider: SlideBody
 var camera: SlideCamera
 var run: RunController
@@ -22,8 +25,10 @@ var _juice: JuiceDirector
 func _ready() -> void:
 	if course == null: course = Courses.all()[0]
 	_env = WorldKit.add_environment(self,course.region_index); WorldKit.add_sun(self,course.region_index)
-	slider = SlideBody.new(); slider.params=MotorParams.new()
-	var camera_params = CameraParams.new(); Game.load_preset("Current Candidate",slider.params,camera_params)
+	slider = SlideBody.new()
+	var preset_motor = MotorParams.new(); var camera_params = CameraParams.new()
+	Game.load_preset("Current Candidate",preset_motor,camera_params)
+	slider.params = params_override if params_override != null else preset_motor
 	_built = CourseFactory.build(course, slider.params.author_avg_speed); add_child(_built["root"])
 	WorldKit.add_shelf_architecture(self,_built["builder"],course.region_index)
 
@@ -76,6 +81,7 @@ func _on_survival_respawn()->void:
 
 func _on_run_finished(result: Dictionary) -> void:
 	if _juice: _juice.finish_burst()
+	if not show_results: return
 	# Survival and Endless are continuous modes. A successful section rolls into
 	# the next descent without inserting a results modal; failures still surface
 	# the full feedback screen.
@@ -104,7 +110,7 @@ func _toggle_inspector()->void:
 
 func _on_inspector_rebuild(spec: Array) -> void:
 	course.spec = spec.duplicate(true)
-	Main.instance.play_course(course)
+	Main.instance.play_course(course, params_override)
 
 func _toggle_pause()->void:
 	if _pause and is_instance_valid(_pause): _close_pause(); return

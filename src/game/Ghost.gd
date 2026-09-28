@@ -14,11 +14,17 @@ const VERSION = 1
 
 var recording = false
 var playing = false
-var duration = 0.0
+var duration = 0.0                  ## length of the loaded playback track
+var recorded_duration = 0.0         ## length of the last finished recording
 
-var _frames: Array = []             ## [time, x, y, z, yaw]
+## Playback and recording use separate buffers and clocks. Sharing one array
+## meant the PB ghost was overwritten by the live run the moment recording
+## began, and both clocks advanced the same timer at double speed.
+var _frames: Array = []             ## playback [time, x, y, z, yaw]
+var _rec_frames: Array = []         ## recording [time, x, y, z, yaw]
 var _accum = 0.0
 var _time = 0.0
+var _rec_time = 0.0
 var _mesh: MeshInstance3D
 var _material: StandardMaterial3D
 
@@ -42,24 +48,24 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- recording
 func start_recording() -> void:
-	_frames.clear()
+	_rec_frames.clear()
 	_accum = 0.0
-	_time = 0.0
+	_rec_time = 0.0
 	recording = true
 
 func record(delta: float, pos: Vector3, yaw: float) -> void:
 	if not recording:
 		return
-	_time += delta
+	_rec_time += delta
 	_accum += delta
 	var step = 1.0 / RATE
 	while _accum >= step:
 		_accum -= step
-		_frames.append([_time, pos.x, pos.y, pos.z, yaw])
+		_rec_frames.append([_rec_time, pos.x, pos.y, pos.z, yaw])
 
 func stop_recording() -> void:
 	recording = false
-	duration = _time
+	recorded_duration = _rec_time
 
 # ---------------------------------------------------------------- playback
 func start_playback() -> void:
@@ -73,6 +79,11 @@ func start_playback() -> void:
 func stop_playback() -> void:
 	playing = false
 	visible = false
+
+## Jump playback to a run time (used when swapping ghosts mid-run).
+func seek(t: float) -> void:
+	_time = maxf(t, 0.0)
+	advance(0.0)
 
 func advance(delta: float) -> void:
 	if not playing or _frames.size() < 2:
@@ -131,24 +142,43 @@ func load_author(builder: TrackBuilder, target_time: float) -> bool:
 static func path_for(course_id: String) -> String:
 	return "user://ghost_%s.dat" % course_id
 
+## Saves the most recent recording.
 func save(course_id: String) -> void:
-	if _frames.size() < 2:
-		return
-	var f = FileAccess.open(path_for(course_id), FileAccess.WRITE)
+	save_path(path_for(course_id))
+
+func save_path(path: String) -> bool:
+	if _rec_frames.size() < 2:
+		return false
+	var f = FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
-		return
+		return false
 	f.store_32(MAGIC)
 	f.store_32(VERSION)
-	f.store_float(duration)
-	f.store_32(_frames.size())
-	for fr in _frames:
+	f.store_float(recorded_duration)
+	f.store_32(_rec_frames.size())
+	for fr in _rec_frames:
 		for v in fr:
 			f.store_float(float(v))
 	f.close()
+	return true
 
 func load_from(course_id: String) -> bool:
+	return load_path(path_for(course_id))
+
+## Reads only the header; -1.0 when no valid ghost exists.
+static func peek_duration(path: String) -> float:
+	if not FileAccess.file_exists(path):
+		return -1.0
+	var f = FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return -1.0
+	var ok = f.get_32() == MAGIC and f.get_32() == VERSION
+	var d = f.get_float() if ok else -1.0
+	f.close()
+	return d
+
+func load_path(path: String) -> bool:
 	_frames.clear()
-	var path = path_for(course_id)
 	if not FileAccess.file_exists(path):
 		return false
 	var f = FileAccess.open(path, FileAccess.READ)

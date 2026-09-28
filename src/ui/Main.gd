@@ -1,6 +1,10 @@
 class_name Main
 extends Node
 
+## Dev-only playtest harness. Loaded by path (never by class name) so shipping
+## code has no dependency on it; export presets exclude the folder entirely.
+const HARNESS_ENTRY = "res://src/harness/Harness.gd"
+
 static var instance: Main
 var world: Node3D
 var ui: CanvasLayer
@@ -33,6 +37,12 @@ func _ready() -> void:
 	if "--apply-medals" in args:
 		add_child(load("res://tests/MedalWriter.gd").new())
 		return
+	if "--harness" in args or "--harness-test" in args:
+		if harness_available():
+			var runner = HARNESS_ENTRY if "--harness" in args else "res://tests/HarnessTests.gd"
+			add_child(load(runner).new())
+			return
+		push_warning("Playtest harness requires a debug build from source; opening menu.")
 	if "--lab" in args: open_lab()
 	else: show_menu()
 
@@ -44,9 +54,15 @@ func show_options() -> void: _set_screen(OptionsScreen.new())
 func show_cosmetics() -> void: _set_screen(CosmeticsScreen.new())
 func show_leaderboards() -> void: _set_screen(LeaderboardsScreen.new())
 
-func play_course(data: CourseData) -> void:
+static func harness_available() -> bool:
+	return OS.is_debug_build() and ResourceLoader.exists(HARNESS_ENTRY)
+
+func current_world() -> Node: return _world_child
+
+func play_course(data: CourseData, params_override: MotorParams = null) -> void:
 	_set_screen(null); _clear_world()
-	var scene = CourseScene.new(); scene.course = data; _world_child = scene; world.add_child(scene)
+	var scene = CourseScene.new(); scene.course = data; scene.params_override = params_override
+	_world_child = scene; world.add_child(scene)
 
 func start_daily() -> void:
 	Game.set_mode(Game.Mode.DAILY); play_course(CourseGenerator.daily())

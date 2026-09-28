@@ -42,5 +42,6 @@ fi
 # Run unit tests through the real project so autoload singletons (Game) exist.
 run_gate "unit tests" "$GODOT_BIN" --headless --path "$ROOT" -- --unit
 run_gate "smoke test" "$GODOT_BIN" --headless --path "$ROOT" -- --smoke
+run_gate "playtest harness" "$GODOT_BIN" --headless --path "$ROOT" -- --harness-test
 
 echo "== all gates passed =="

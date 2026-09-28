@@ -33,4 +33,5 @@ if ($courseCount -ne 25) {
 
 Invoke-Gate 'unit tests' @('--headless', '--path', $Root, '--', '--unit')
 Invoke-Gate 'smoke test' @('--headless', '--path', $Root, '--', '--smoke')
+Invoke-Gate 'playtest harness' @('--headless', '--path', $Root, '--', '--harness-test')
 Write-Host '== all gates passed =='
