@@ -215,7 +215,9 @@ func _test_course_build() -> void:
 	var built = Course01.build()
 	check("course built", built.has("root"))
 	# Course 01 is the movement tutorial and intentionally omits score/mastery.
-	check("tutorial intentionally has no pickups", built["pickups"].is_empty(), str(built["pickups"].size()))
+	var scoring = built["pickups"].filter(func(p): return p.kind != Pickup.Kind.BADGE)
+	check("tutorial intentionally has no score pickups", scoring.is_empty(), str(scoring.size()))
+	check("tutorial still hides a chick badge", built["badge"] != null)
 	check("tutorial intentionally has no mastery collectible", built["mastery"] == null)
 	check("course has checkpoints", built["checkpoints"].size() >= 4, str(built["checkpoints"].size()))
 	check("course has a finish", built["finish"] != null)

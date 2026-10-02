@@ -14,6 +14,7 @@ func _ready() -> void:
 		["TIME TRIAL", "Pure time · PB ghost · author pace", Game.Mode.TIME_TRIAL],
 		["SCORE ATTACK", "Flow + pickups · time is informational", Game.Mode.SCORE_ATTACK],
 		["SURVIVAL", "Continuous authored descents · 3 lives", Game.Mode.SURVIVAL],
+		["REGION RUN", "Five courses, one clock · retry restarts the region", Game.Mode.MARATHON],
 		["DAILY DESCENT", "Shared deterministic seed · First Sight + unlimited retries", Game.Mode.DAILY],
 		["ENDLESS", "Generated sight-reading · rising prestige", Game.Mode.ENDLESS],
 	]

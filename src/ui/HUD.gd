@@ -34,7 +34,8 @@ func setup(controller: RunController, player: SlideBody, pb_ghost: Ghost = null)
 	_best_time = float(Game.record_for(run.course.id)["best_time"])
 	run.score_changed.connect(_on_score)
 	run.flow_changed.connect(_on_flow)
-	run.checkpoint_reached.connect(_on_checkpoint)
+	run.split_reached.connect(_on_split)
+	run.run_restarted.connect(func(_f): _delta_label.text = "")
 	run.respawned.connect(func(): _flash_message("RESPAWN", UiKit.WARN))
 
 func _ready() -> void:
@@ -128,7 +129,10 @@ func _process(delta: float) -> void:
 	if run == null or slider == null:
 		return
 
-	_time_label.text = RunController.format_time(run.time)
+	if Game.current_mode == Game.Mode.MARATHON:
+		_time_label.text = RunController.format_time(float(Game.marathon["total"]) + run.time)
+	else:
+		_time_label.text = RunController.format_time(run.time)
 	_speed_label.text = UiKit.speed_string(slider.state.speed)
 
 	if run.state == RunController.State.COUNTDOWN:
@@ -144,6 +148,9 @@ func _process(delta: float) -> void:
 		_target_label.text = "LIVES  %d" % Game.survival_lives
 	elif Game.current_mode == Game.Mode.ENDLESS:
 		_target_label.text = "PRESTIGE  %d" % (Game.endless_prestige + 1)
+	elif Game.current_mode == Game.Mode.MARATHON:
+		var mb = Game.marathon_best(int(Game.marathon["region"]))
+		_target_label.text = "COURSE %d/5   BEST %s" % [int(Game.marathon["index"]) + 1, RunController.format_time(mb)]
 	elif Game.current_mode == Game.Mode.DAILY:
 		var daily = Game.daily_record()
 		_target_label.text = "FIRST SIGHT  %s" % RunController.format_time(float(daily.get("first_sight", 0.0)))
@@ -179,18 +186,33 @@ func _on_flow(seconds: float, tier: int, multiplier: int) -> void:
 	var name = FlowSystem.NAMES[tier] if tier >= 0 and tier < FlowSystem.NAMES.size() else ""
 	_flow_label.text = ("%s  x%d   %.1fs" % [name, multiplier, seconds]) if name != "" else ""
 
-func _on_checkpoint(index: int) -> void:
-	var split = ""
-	if _pb_ghost and _pb_ghost.has_data():
-		var cp_pos = run.checkpoint_position(index)
-		if cp_pos != Vector3.INF:
-			var pb_t = _pb_ghost.time_near_position(cp_pos)
-			if pb_t >= 0.0:
-				var d: float = float(run.time) - float(pb_t)
-				_delta_label.text = "%s%.2f vs PB" % ["+" if d >= 0.0 else "", d]
-				_delta_label.add_theme_color_override("font_color", UiKit.WARN if d >= 0.0 else UiKit.GOOD)
-				split = "   %s%.2f" % ["+" if d >= 0.0 else "", d]
-	_flash_message("CHECKPOINT %d   %s%s" % [index + 1, RunController.format_time(run.time), split], UiKit.LINE)
+## LiveSplit conventions: green ahead of PB, red behind, gold for a best-ever
+## segment. A raced run code adds its own delta.
+const GOLD = Color(1.0, 0.82, 0.3)
+
+func _on_split(index: int, t: float, delta_pb: float, gold: bool) -> void:
+	var is_finish = index == run.splits.size() - 1
+	var label = "FINISH" if is_finish else "CHECKPOINT %d" % (index + 1)
+	var parts = PackedStringArray([label, RunController.format_time(t)])
+	var color = UiKit.LINE
+	if delta_pb != INF:
+		parts.append(_signed(delta_pb) + " PB")
+		color = GOLD if gold else (UiKit.GOOD if delta_pb < 0.0 else UiKit.WARN)
+		_delta_label.text = _signed(delta_pb) + " vs PB"
+		_delta_label.add_theme_color_override("font_color", color)
+	elif gold:
+		color = GOLD
+	if run.rival_replay and index < run.rival_replay.splits.size() and float(run.rival_replay.splits[index]) > 0.0:
+		parts.append(_signed(t - float(run.rival_replay.splits[index])) + " RIVAL")
+	_flash_message("   ".join(parts), color)
+
+static func _signed(d: float) -> String:
+	return "%s%.2f" % ["+" if d >= 0.0 else "−", absf(d)]
+
+## A centred callout that outranks checkpoint flashes (badges, tech).
+func announce(text: String, color: Color) -> void:
+	_flash_message(text, color)
+	_flash_timer = 2.4
 
 func _flash_message(text: String, color: Color) -> void:
 	_flash.text = text

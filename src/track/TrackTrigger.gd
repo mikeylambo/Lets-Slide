@@ -39,6 +39,7 @@ func setup(size: Vector3, frame: Dictionary) -> void:
 		_add_gate_visual(size, Pickup.COLORS[Pickup.Kind.CHAIN] if kind == Kind.CHECKPOINT else Color(0.4, 1.0, 0.6))
 
 	monitoring = true
+	collision_mask = SlideBody.RIDER_LAYER
 	body_entered.connect(_on_body_entered)
 
 func _add_gate_visual(size: Vector3, c: Color) -> void:
@@ -58,7 +59,7 @@ func _add_gate_visual(size: Vector3, c: Color) -> void:
 	add_child(mi)
 
 func _on_body_entered(body: Node3D) -> void:
-	if not (body is SlideBody):
+	if not (body is SlideBody) or not (body as SlideBody).is_player:
 		return
 	if once and _fired:
 		return
