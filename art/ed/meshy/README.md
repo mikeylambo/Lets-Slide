@@ -23,3 +23,11 @@ Drop-in
   (falls back to the stand-in rider if missing).
 - Scale doesn't matter: the importer normalises height to 1.2 m, feet on the
   origin, facing +Z.
+
+## Current model
+
+`art/ed/ed.glb` was generated from `01_ed_front_render_TPOSE.png` (background
+removed) with **Hunyuan 3D 2.1** through Scenario: 15,000 triangles, one
+textured mesh, static T-pose (no rig yet). Meshy 7.1 needs a Scenario Pro
+plan. To replace the model, overwrite `art/ed/ed.glb`; the game normalises
+any GLB to riding height automatically.

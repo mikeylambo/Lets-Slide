@@ -26,6 +26,7 @@ func _ready() -> void:
 	get_tree().quit(1 if failures > 0 else 0)
 
 func _rider() -> void:
+	RiderModel.glb_path = "res://art/ed/__missing__.glb"   # force the stand-in
 	var body = SlideBody.new(); add_child(body)
 	check("stand-in Ed is built when no model is present", body.rider != null and not body.rider.is_imported and body.rider.get_child_count() > 25, str(body.rider.get_child_count()))
 	body.rider.pose(1.0, 1.0, 1.0)
@@ -35,6 +36,13 @@ func _rider() -> void:
 	body.rider.pose(0.0, 0.0, 0.0)
 	check("tuck lowers the rider", hip_low < body.rider.get_node("torso").position.y)
 	body.queue_free()
+	RiderModel.glb_path = RiderModel.GLB_PATH
+	if ResourceLoader.exists(RiderModel.GLB_PATH):
+		var real = RiderModel.new(); add_child(real)
+		await get_tree().process_frame
+		var box = RiderModel._aabb(real, Transform3D.IDENTITY)
+		check("Ed's model (art/ed/ed.glb) loads at riding height", real.is_imported and absf(box.size.y - RiderModel.HEIGHT * RiderModel.RIDE_SCALE) < 0.01, str(box.size))
+		real.queue_free()
 
 	# A 2 m tall model exported at runtime is normalised to Ed's 1.2 m.
 	var root = Node3D.new(); var mi = MeshInstance3D.new(); var box = BoxMesh.new(); box.size = Vector3(0.6, 2.0, 0.4)
