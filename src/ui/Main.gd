@@ -11,8 +11,11 @@ var ui: CanvasLayer
 var _world_child: Node
 var _screen: Control
 
+var net: NetSession
+
 func _ready() -> void:
 	instance = self
+	net = NetSession.new(); net.name = "NetSession"; add_child(net)
 	world = Node3D.new(); world.name = "World"; add_child(world)
 	ui = CanvasLayer.new(); ui.name = "UI"; ui.layer = 10; add_child(ui)
 	var args = OS.get_cmdline_user_args()
@@ -33,6 +36,9 @@ func _ready() -> void:
 		return
 	if "--export-courses" in args:
 		add_child(load("res://tests/CourseExporter.gd").new())
+		return
+	if "--net-test" in args:
+		add_child(load("res://tests/NetTests.gd").new())
 		return
 	if "--community-test" in args:
 		add_child(load("res://tests/CommunityTests.gd").new())
@@ -83,6 +89,7 @@ func start_marathon(region: int) -> void:
 	Game.start_marathon(region); play_course(Courses.region_courses(region)[0])
 func show_run_codes() -> void: _clear_world(); _set_screen(RunCodeScreen.new())
 func show_codex() -> void: _set_screen(CodexScreen.new())
+func show_lobby() -> void: _clear_world(); _set_screen(LobbyScreen.new())
 func show_courses() -> void: _clear_world(); _set_screen(CoursesScreen.new())
 func show_course_editor(c: CourseData) -> void:
 	_clear_world(); var e = CourseEditor.new(); e.course = c; _set_screen(e)
