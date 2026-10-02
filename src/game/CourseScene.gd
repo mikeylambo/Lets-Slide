@@ -119,11 +119,19 @@ func _on_run_finished(result: Dictionary) -> void:
 		result["marathon_total"] = m["total"]
 		result["marathon_previous"] = prev
 		result["marathon_new_best"] = Game.submit_marathon(int(m["region"]), float(m["total"]))
+	if Game.verifying_course and course.generated and course.id.begins_with("c_") and bool(result.get("finished", false)) and result.get("replay") != null:
+		course.author_time = float(result["time"])
+		course.gold_time = course.author_time * 1.08; course.silver_time = course.author_time * 1.22; course.bronze_time = course.author_time * 1.45
+		course.medal_source = "author"
+		course.set_meta("author_run", (result["replay"] as Replay).to_code())
+		CustomCourses.save(course)
+		Game.verifying_course = false
+		result["verified"] = true
 	_results = ResultsScreen.new()
 	_results.result = result
 	_results.course = course
 	_results.retry_requested.connect(_on_retry)
-	_results.exit_requested.connect(func(): Main.instance.show_mode_select())
+	_results.exit_requested.connect(func(): Main.instance.leave_course())
 	_results.next_requested.connect(func(): Main.instance.next_mode_course())
 	_results.watch_requested.connect(_on_watch)
 	_ui.add_child(_results)
@@ -160,7 +168,7 @@ func _toggle_pause()->void:
 	if run.state==RunController.State.FINISHED:return
 	get_tree().paused=true; run.pause_run(); _pause=PauseMenu.new(); _pause.process_mode=Node.PROCESS_MODE_ALWAYS
 	_pause.resume_requested.connect(_close_pause); _pause.retry_requested.connect(func():_close_pause();restart())
-	_pause.exit_requested.connect(func():get_tree().paused=false;Main.instance.quit_to_menu()); _ui.add_child(_pause)
+	_pause.exit_requested.connect(func():get_tree().paused=false;Main.instance.leave_course() if Game.editor_course else Main.instance.quit_to_menu()); _ui.add_child(_pause)
 func _close_pause()->void:
 	if _pause and is_instance_valid(_pause):_pause.queue_free();_pause=null
 	get_tree().paused=false;run.resume_run()

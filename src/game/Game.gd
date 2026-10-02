@@ -55,6 +55,10 @@ var survival_course_index = 0
 var endless_prestige = 0
 ## Region Run state: five courses back to back on one cumulative clock.
 var marathon = {"region": 0, "index": 0, "total": 0.0, "splits": []}
+## Course editor round trip: where to return after a test ride, and whether
+## the ride is a verification run that sets the author time.
+var editor_course: CourseData = null
+var verifying_course = false
 
 # ------------------------------------------------------------ chick badges
 func has_badge(course_id: String) -> bool:

@@ -34,6 +34,9 @@ func _ready() -> void:
 	if "--export-courses" in args:
 		add_child(load("res://tests/CourseExporter.gd").new())
 		return
+	if "--community-test" in args:
+		add_child(load("res://tests/CommunityTests.gd").new())
+		return
 	if "--speedrun-test" in args:
 		add_child(load("res://tests/SpeedrunTests.gd").new())
 		return
@@ -80,6 +83,14 @@ func start_marathon(region: int) -> void:
 	Game.start_marathon(region); play_course(Courses.region_courses(region)[0])
 func show_run_codes() -> void: _clear_world(); _set_screen(RunCodeScreen.new())
 func show_codex() -> void: _set_screen(CodexScreen.new())
+func show_courses() -> void: _clear_world(); _set_screen(CoursesScreen.new())
+func show_course_editor(c: CourseData) -> void:
+	_clear_world(); var e = CourseEditor.new(); e.course = c; _set_screen(e)
+## Leaving a course returns to the editor after a test ride, else mode select.
+func leave_course() -> void:
+	get_tree().paused = false
+	if Game.editor_course: show_course_editor(Game.editor_course)
+	else: show_mode_select()
 func start_survival() -> void:
 	Game.set_mode(Game.Mode.SURVIVAL); Game.survival_lives = 3; Game.survival_course_index = 0; play_course(Courses.all()[0])
 

@@ -119,7 +119,18 @@ static func from_code(code: String) -> Replay:
 	var c = code.strip_edges()
 	if not c.begins_with(CODE_PREFIX):
 		return null
-	return from_bytes(Marshalls.base64_to_raw(c.trim_prefix(CODE_PREFIX)))
+	return from_bytes(decode_b64(c.trim_prefix(CODE_PREFIX)))
+
+## base64 → bytes without engine errors on malformed input (codes are pasted
+## by players, so bad input is normal, not exceptional).
+static func decode_b64(text: String) -> PackedByteArray:
+	var t = text.strip_edges().replace("\n", "").replace(" ", "")
+	if t.length() == 0 or t.length() % 4 != 0:
+		return PackedByteArray()
+	var re = RegEx.create_from_string("^[A-Za-z0-9+/]+={0,2}$")
+	if re.search(t) == null:
+		return PackedByteArray()
+	return Marshalls.base64_to_raw(t)
 
 static func pb_path(course: String) -> String:
 	return "user://replays/%s.slrp" % course

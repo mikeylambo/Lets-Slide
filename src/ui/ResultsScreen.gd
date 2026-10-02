@@ -35,6 +35,8 @@ func _ready() -> void:
 	var new_record: bool = beaten.get("time", false)
 
 	col.add_child(UiKit.title("FINISH" if bool(result.get("finished", false)) else "RUN OVER", "%s · %s" % [Game.mode_name(), course.title]))
+	if bool(result.get("verified", false)):
+		col.add_child(UiKit.label("COURSE VERIFIED  ·  AUTHOR TIME %s  ·  ready to share" % RunController.format_time(float(result["time"])), UiKit.H3, UiKit.GOOD))
 	if result.has("marathon_total"):
 		var mt = float(result["marathon_total"]); var mp = float(result.get("marathon_previous", 0.0))
 		var line = "REGION RUN  %s" % RunController.format_time(mt)
@@ -147,7 +149,7 @@ func _ready() -> void:
 			share.text = "CODE COPIED")
 		actions.add_child(share)
 
-	var back = UiKit.button("COURSE SELECT")
+	var back = UiKit.button("EDITOR" if Game.editor_course else "COURSE SELECT")
 	back.pressed.connect(func(): exit_requested.emit())
 	actions.add_child(back)
 

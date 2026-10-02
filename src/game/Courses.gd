@@ -33,7 +33,7 @@ static func _load_saved_courses() -> Array[CourseData]:
 static func by_id(id: String) -> CourseData:
 	for c in all():
 		if c.id == id: return c
-	return null
+	return CustomCourses.load_course(id)
 
 static func region_courses(region_index: int) -> Array[CourseData]:
 	var out: Array[CourseData] = []
