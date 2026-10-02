@@ -49,7 +49,7 @@ func _ready() -> void:
 	_layer.layer = 7
 	add_child(_layer)
 	_lines = SpeedLines.new()
-	_lines.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_lines.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_layer.add_child(_lines)
 	var gen = AudioStreamGenerator.new()

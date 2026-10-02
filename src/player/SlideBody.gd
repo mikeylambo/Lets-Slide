@@ -36,11 +36,12 @@ var input_tap = Callable()          ## optional: sees the final input packet eve
 
 var _visual: Node3D
 var _board: MeshInstance3D
-var _core: MeshInstance3D
+var rider: RiderModel
 var _trail: Node3D
 var _shape: CollisionShape3D
 var _spawn_position = Vector3.ZERO
 var _spawn_yaw = 0.0
+var _tuck_latched = false
 
 func _ready() -> void:
 	if params == null:
@@ -81,15 +82,12 @@ func _build_visual() -> void:
 	_board.material_override = _neon_material(palette["board"], 1.8)
 	_visual.add_child(_board)
 
-	var core_mesh = CapsuleMesh.new()
-	core_mesh.radius = 0.26
-	core_mesh.height = 1.0
-	_core = MeshInstance3D.new()
-	_core.mesh = core_mesh
-	_core.position = Vector3(0, 0.12, -0.05)
-	_core.rotation_degrees = Vector3(-12, 0, 0)
-	_core.material_override = _neon_material(palette["core"], 1.2)
-	_visual.add_child(_core)
+	rider = RiderModel.new()
+	rider.glow_color = palette["core"]
+	_visual.add_child(rider)
+	if ghost_tint.a > 0.0:
+		rider.set_ghost(Color(ghost_tint.r, ghost_tint.g, ghost_tint.b, ghost_tint.a * 0.8))
+	landed.connect(func(q, s): rider.land(q, s))
 
 	_trail = SpeedTrail.new()
 	_trail.top_level = true
@@ -141,6 +139,7 @@ func respawn(pos: Vector3 = Vector3.INF, yaw: float = 0.0) -> void:
 	global_position = target
 	velocity = Vector3.ZERO
 	state.reset(target, y)
+	_tuck_latched = false
 	if _trail and _trail.has_method("clear_trail"):
 		_trail.call("clear_trail")
 
@@ -214,7 +213,11 @@ func _gather_device_input() -> void:
 	input.move_dir = (right * raw.x + fwd * -raw.y)
 	if input.move_dir.length() > 1.0:
 		input.move_dir = input.move_dir.normalized()
-	input.tuck = Input.is_action_pressed("tuck")
+	if bool(Game.settings.get("tuck_toggle", false)):
+		if Input.is_action_just_pressed("tuck"): _tuck_latched = not _tuck_latched
+		input.tuck = _tuck_latched
+	else:
+		input.tuck = Input.is_action_pressed("tuck")
 	input.brake = Input.is_action_pressed("brake")
 	input.jump_pressed = params.enable_jump and Input.is_action_just_pressed("dev_jump")
 
@@ -343,8 +346,7 @@ func _update_visual(delta: float) -> void:
 	target = target.rotated(fwd, deg_to_rad(lean))
 	_visual.basis = _visual.basis.slerp(target, clampf(delta * 14.0, 0.0, 1.0)).orthonormalized()
 
-	var tuck_offset: float = -0.16 * state.tuck
-	_core.position.y = lerpf(_core.position.y, 0.12 + tuck_offset, clampf(delta * 10.0, 0.0, 1.0))
+	rider.animate(delta, state.tuck, state.grounded, clampf(state.speed / maxf(params.max_speed, 1.0), 0.0, 1.0))
 
 	if _trail and _trail is SpeedTrail:
 		var trail = _trail as SpeedTrail
@@ -356,11 +358,10 @@ func set_flow_tier(tier: int) -> void:
 	if _trail and _trail is SpeedTrail:
 		(_trail as SpeedTrail).flow_tier = tier
 	var board_mat = _board.material_override as StandardMaterial3D if _board else null
-	var core_mat = _core.material_override as StandardMaterial3D if _core else null
 	if board_mat:
 		board_mat.emission_energy_multiplier = 1.8 + float(tier) * 0.55
-	if core_mat:
-		core_mat.emission_energy_multiplier = 1.2 + float(tier) * 0.65
+	if rider:
+		rider.set_glow(0.6 + float(tier) * 0.9)
 
 func telemetry() -> Dictionary:
 	var d = state.snapshot()

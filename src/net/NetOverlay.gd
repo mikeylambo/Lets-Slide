@@ -15,11 +15,10 @@ func setup(session: NetSession) -> void:
 	net.round_ended.connect(_show_final)
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var box = VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	box.position = Vector2(-300, 170)
+	UiKit.pin(box, Control.PRESET_TOP_RIGHT, Vector2(46, 190))
 	box.custom_minimum_size = Vector2(260, 0)
 	add_child(box)
 	_clock = UiKit.mono("", UiKit.H3, UiKit.ACCENT)
@@ -47,8 +46,7 @@ func _fill(rows: Array) -> void:
 func _show_final(rows: Array) -> void:
 	if _final: _final.queue_free()
 	_final = UiKit.panel(22)
-	_final.set_anchors_preset(Control.PRESET_CENTER)
-	_final.position = Vector2(-260, -200)
+	UiKit.pin(_final, Control.PRESET_CENTER)
 	_final.custom_minimum_size = Vector2(520, 0)
 	_final.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_final)

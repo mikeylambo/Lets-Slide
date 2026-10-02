@@ -2,9 +2,9 @@ class_name ModeSelect
 extends Control
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop())
-	var margin = MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var margin = MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 90); margin.add_theme_constant_override("margin_right", 90)
 	margin.add_theme_constant_override("margin_top", 60); margin.add_theme_constant_override("margin_bottom", 50); add_child(margin)
 	var col = VBoxContainer.new(); col.add_theme_constant_override("separation", 10); margin.add_child(col)

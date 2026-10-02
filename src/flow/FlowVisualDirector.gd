@@ -22,7 +22,7 @@ func _build_overlay() -> void:
 	layer.layer = 5
 	add_child(layer)
 	_overlay = ColorRect.new()
-	_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shader = Shader.new()
 	shader.code = """
@@ -56,8 +56,10 @@ func _process(delta: float) -> void:
 	_invert_mix = lerpf(_invert_mix, _invert_target, clampf(delta * 3.0, 0.0, 1.0))
 	_chroma_mix = lerpf(_chroma_mix, _chroma_target, clampf(delta * 4.0, 0.0, 1.0))
 	var fx = float(Game.settings.get("flow_effects", 1.0))
+	# INVERT is a full-screen colour inversion: off under Reduce flashes.
+	var invert_ok = 0.0 if bool(Game.settings.get("reduce_flashes", false)) else 1.0
 	if _shader != null:
-		_shader.set_shader_parameter("invert_amount", _invert_mix * fx)
+		_shader.set_shader_parameter("invert_amount", _invert_mix * fx * invert_ok)
 		_shader.set_shader_parameter("chroma_amount", _chroma_mix * fx)
 	if environment_node == null or environment_node.environment == null:
 		return

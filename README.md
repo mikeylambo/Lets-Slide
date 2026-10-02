@@ -52,6 +52,16 @@ a slider to its saved value. Changing `author_avg_speed` rebuilds the course.
   never write profile records, leaderboards, or PB ghosts. `Tools/verify.sh` gates it
   with `--harness-test`.
 
+## What's in the game (T1–T5)
+
+- **Speedrun suite:** tick-exact timer, LiveSplit-style splits, run codes (watch or race any run as a live rival), chick badges, tech codex, Region Run.
+- **Community courses:** in-game editor, verify-to-share author times, course codes (`SLCS1:`), race the author.
+- **Online:** time-attack rounds over direct IP or LAN; see `MULTIPLAYER.md`.
+- **Ed:** stand-in rider built in code. Drop a Meshy export at `art/ed/ed.glb` and it's used automatically (inputs in `art/ed/meshy/`).
+- **Options:** control remapping, reduce flashes, tuck toggle, interface scale, tutorial hints.
+- **Phone build:** `Tools/web-pocket.sh` builds the browser version.
+- **Visual QA:** `xvfb-run godot --path . --rendering-driver opengl3 -- --screen-tour=<dir>` renders every screen to PNG.
+
 ## Controls
 
 | Action | Keyboard | Pad |

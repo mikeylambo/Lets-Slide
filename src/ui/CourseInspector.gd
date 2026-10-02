@@ -9,10 +9,10 @@ var course: CourseData
 var _rows = VBoxContainer.new()
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(UiKit.backdrop(0.92))
-	var margin = MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var margin = MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 45); margin.add_theme_constant_override("margin_right", 45)
 	margin.add_theme_constant_override("margin_top", 35); margin.add_theme_constant_override("margin_bottom", 35); add_child(margin)
 	var col = VBoxContainer.new(); col.add_theme_constant_override("separation", 8); margin.add_child(col)

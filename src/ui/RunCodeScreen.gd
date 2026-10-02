@@ -13,9 +13,9 @@ var _race: Button
 var _replay: Replay
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop())
-	var margin = MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var margin = MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 90)
 	margin.add_theme_constant_override("margin_top", 56); margin.add_theme_constant_override("margin_bottom", 44)
 	add_child(margin)

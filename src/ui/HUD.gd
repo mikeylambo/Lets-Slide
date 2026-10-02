@@ -39,12 +39,12 @@ func setup(controller: RunController, player: SlideBody, pb_ghost: Ghost = null)
 	run.respawned.connect(func(): _flash_message("RESPAWN", UiKit.WARN))
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# --- top left: time -----------------------------------------------------
 	var tl = VBoxContainer.new()
-	tl.position = Vector2(46, 34)
+	UiKit.pin(tl, Control.PRESET_TOP_LEFT, Vector2(46, 34))
 	tl.add_theme_constant_override("separation", 0)
 	add_child(tl)
 	tl.add_child(UiKit.label("TIME", UiKit.BODY, UiKit.TEXT_DIM))
@@ -55,8 +55,7 @@ func _ready() -> void:
 
 	# --- top right: speed ---------------------------------------------------
 	var tr = VBoxContainer.new()
-	tr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	tr.position = Vector2(-260, 34)
+	UiKit.pin(tr, Control.PRESET_TOP_RIGHT, Vector2(46, 34))
 	tr.alignment = BoxContainer.ALIGNMENT_END
 	add_child(tr)
 	var sp_key = UiKit.label("SPEED", UiKit.BODY, UiKit.TEXT_DIM)
@@ -78,8 +77,7 @@ func _ready() -> void:
 
 	# --- bottom left: score -------------------------------------------------
 	var bl = VBoxContainer.new()
-	bl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	bl.position = Vector2(46, -110)
+	UiKit.pin(bl, Control.PRESET_BOTTOM_LEFT, Vector2(46, 40))
 	add_child(bl)
 	_score_label = UiKit.mono("0", 32, UiKit.TEXT)
 	bl.add_child(_score_label)
@@ -90,36 +88,32 @@ func _ready() -> void:
 
 	# --- bottom right: target ----------------------------------------------
 	_target_label = UiKit.mono("", UiKit.H3, UiKit.WARN)
-	_target_label.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_target_label.position = Vector2(-360, -66)
+	UiKit.pin(_target_label, Control.PRESET_BOTTOM_RIGHT, Vector2(46, 40))
 	_target_label.custom_minimum_size = Vector2(314, 0)
 	_target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_target_label)
 
 	# --- centre: countdown + flashes ---------------------------------------
 	_countdown = UiKit.mono("", 120, UiKit.LINE)
-	_countdown.set_anchors_preset(Control.PRESET_CENTER)
+	UiKit.pin(_countdown, Control.PRESET_CENTER, Vector2(0, -90))
 	_countdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_countdown.position = Vector2(-160, -120)
 	_countdown.custom_minimum_size = Vector2(320, 0)
 	add_child(_countdown)
 
 	_flash = UiKit.mono("", 36, UiKit.GOOD)
-	_flash.set_anchors_preset(Control.PRESET_CENTER)
+	UiKit.pin(_flash, Control.PRESET_CENTER, Vector2(0, 70))
 	_flash.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_flash.position = Vector2(-260, 40)
 	_flash.custom_minimum_size = Vector2(520, 0)
 	add_child(_flash)
 
 	_telemetry = TelemetryPanel.new()
-	_telemetry.position = Vector2(46, 170)
+	UiKit.pin(_telemetry, Control.PRESET_TOP_LEFT, Vector2(46, 170))
 	_telemetry.visible = bool(Game.settings.get("show_telemetry", false))
 	add_child(_telemetry)
 
 	# --- bottom centre: input display (speedrun overlay) --------------------
 	_inputs = InputDisplay.new()
-	_inputs.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_inputs.position = Vector2(-InputDisplay.W * 0.5, -InputDisplay.H - 28)
+	UiKit.pin(_inputs, Control.PRESET_CENTER_BOTTOM, Vector2(0, 28))
 	_inputs.slider = slider
 	_inputs.visible = bool(Game.settings.get("show_inputs", false))
 	add_child(_inputs)

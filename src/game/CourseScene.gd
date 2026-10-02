@@ -62,6 +62,8 @@ func _ready() -> void:
 	run.setup(course,_built,slider,ghost,flow); audio.bind_run(run); hud.setup(run,slider,ghost)
 	if rival: run.setup_rival(rival, rival_replay)
 	tech = TechTracker.new(); add_child(tech); tech.setup(slider, run)
+	if TutorialCoach.wanted(course) and watch_replay == null:
+		var coach = TutorialCoach.new(); _ui.add_child(coach); coach.setup(slider, run, _built["builder"])
 	tech.discovered.connect(func(_id, info): hud.announce("TECH DISCOVERED  ·  %s" % info["name"], Color(1.0, 0.82, 0.3)))
 	run.badge_found.connect(func(_c, first): hud.announce("CHICK BADGE FOUND" if first else "CHICK BADGE", Color(1.0, 0.86, 0.22)))
 	if watch_replay: run.play_replay(watch_replay)

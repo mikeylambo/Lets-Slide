@@ -185,7 +185,7 @@ func _build_ui() -> void:
 
 	# --- right column: the tuning dock --------------------------------------
 	_panel = LabPanel.new()
-	_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE)
 	_panel.offset_left = -452.0
 	_panel.offset_right = -14.0
 	_panel.offset_top = 18.0

@@ -6,13 +6,12 @@ signal retry_requested()
 signal exit_requested()
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop(0.78))
 
 	var col = VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	col.set_anchors_preset(Control.PRESET_CENTER)
-	col.position = Vector2(-140, -160)
+	UiKit.pin(col, Control.PRESET_CENTER)
 	col.custom_minimum_size = Vector2(280, 0)
 	add_child(col)
 

@@ -174,7 +174,7 @@ func _test_outputs() -> void:
 func _test_shipping_isolation() -> void:
 	check("harness gated to debug builds", Main.harness_available() == OS.is_debug_build())
 	var cfg = FileAccess.get_file_as_string("res://export_presets.cfg")
-	check("every export preset excludes src/harness", cfg.count("src/harness/*") == cfg.count("exclude_filter="), "%d/%d" % [cfg.count("src/harness/*"), cfg.count("exclude_filter=")])
+	check("every export preset excludes dev-only folders", cfg.count("src/harness/*") == cfg.count("exclude_filter="), "%d/%d" % [cfg.count("src/harness/*"), cfg.count("exclude_filter=")])
 	var offenders = []
 	for path in _scripts("res://src"):
 		if path.begins_with("res://src/harness/") or path == "res://src/ui/Main.gd":
