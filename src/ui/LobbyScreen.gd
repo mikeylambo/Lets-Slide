@@ -18,9 +18,9 @@ const LENGTHS = [[120.0, "2 MIN"], [180.0, "3 MIN"], [300.0, "5 MIN"], [600.0, "
 
 func _ready() -> void:
 	net = Main.instance.net
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop())
-	var margin = MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var margin = MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 90)
 	margin.add_theme_constant_override("margin_top", 50); margin.add_theme_constant_override("margin_bottom", 40)
 	add_child(margin)

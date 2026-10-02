@@ -20,7 +20,7 @@ func setup(player: SlideBody, flow_system: FlowSystem, run_controller: RunContro
 	run = run_controller
 	layer = 6
 	_fx = SpeedFx.new()
-	_fx.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fx.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fx)
 	if slider:
@@ -49,9 +49,11 @@ func _process(delta: float) -> void:
 		_fx.speed_t = _speed_t * float(Game.settings.get("speed_effects", 1.0))
 		_fx.flow_tier = _flow_tier
 		_fx.flow_intensity = float(Game.settings.get("flow_effects", 1.0))
-		_fx.landing_flash = _landing_flash
-		_fx.bonk_flash = _bonk_flash
-		_fx.finish_flash = _finish_flash
+		# Reduce flashes (accessibility) removes every full-screen flash.
+		var flash = 0.0 if bool(Game.settings.get("reduce_flashes", false)) else 1.0
+		_fx.landing_flash = _landing_flash * flash
+		_fx.bonk_flash = _bonk_flash * flash
+		_fx.finish_flash = _finish_flash * flash
 		_fx.queue_redraw()
 
 class SpeedFx:

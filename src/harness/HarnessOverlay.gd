@@ -25,12 +25,12 @@ func setup(h) -> void:
 	harness = h
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	var strip_wrap = CenterContainer.new()
-	strip_wrap.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	strip_wrap.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	strip_wrap.offset_top = -52
 	strip_wrap.offset_bottom = -14
 	strip_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -59,7 +59,7 @@ func _ready() -> void:
 	add_child(_toasts)
 
 	_legend = UiKit.label("F1/RB tune · Tab/LB swap A↔B · R/Y retry · N/Select marker · F2/L3 readability kit · M click · B blind · T telemetry", 13, UiKit.TEXT_DIM)
-	_legend.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_legend.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	_legend.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_legend.offset_top = 10
 	add_child(_legend)
@@ -68,7 +68,7 @@ func _ready() -> void:
 
 func _build_card() -> void:
 	var wrap = CenterContainer.new()
-	wrap.set_anchors_preset(Control.PRESET_FULL_RECT)
+	wrap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(wrap)
 	_card = PanelContainer.new()

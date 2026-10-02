@@ -37,6 +37,15 @@ func _ready() -> void:
 	if "--export-courses" in args:
 		add_child(load("res://tests/CourseExporter.gd").new())
 		return
+	if Array(args).any(func(a): return str(a).begins_with("--ed-preview")):
+		world.add_child(load("res://tests/EdPreview.gd").new())
+		return
+	if "--presentation-test" in args:
+		add_child(load("res://tests/PresentationTests.gd").new())
+		return
+	if Array(args).any(func(a): return str(a).begins_with("--screen-tour=")):
+		add_child(load("res://tests/ScreenTour.gd").new())
+		return
 	if "--net-test" in args:
 		add_child(load("res://tests/NetTests.gd").new())
 		return
@@ -89,6 +98,7 @@ func start_marathon(region: int) -> void:
 	Game.start_marathon(region); play_course(Courses.region_courses(region)[0])
 func show_run_codes() -> void: _clear_world(); _set_screen(RunCodeScreen.new())
 func show_codex() -> void: _set_screen(CodexScreen.new())
+func show_controls() -> void: _set_screen(ControlsScreen.new())
 func show_lobby() -> void: _clear_world(); _set_screen(LobbyScreen.new())
 func show_courses() -> void: _clear_world(); _set_screen(CoursesScreen.new())
 func show_course_editor(c: CourseData) -> void:

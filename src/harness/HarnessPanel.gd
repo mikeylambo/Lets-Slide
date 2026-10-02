@@ -47,7 +47,7 @@ func setup(h) -> void:
 	refresh()
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE)
 	offset_left = -480.0
 	offset_right = -14.0
 	offset_top = 14.0

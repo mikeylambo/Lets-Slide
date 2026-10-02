@@ -2,8 +2,8 @@ class_name RecordsScreen
 extends Control
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT); add_child(UiKit.backdrop())
-	var margin=MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(UiKit.backdrop())
+	var margin=MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left",70); margin.add_theme_constant_override("margin_right",70); margin.add_theme_constant_override("margin_top",45); margin.add_theme_constant_override("margin_bottom",40); add_child(margin)
 	var col=VBoxContainer.new(); col.add_theme_constant_override("separation",10); margin.add_child(col)
 	col.add_child(UiKit.title("RECORDS", "%d / 25 medals · %d medal points" % [Game.medal_total(),Game.medal_points()]))

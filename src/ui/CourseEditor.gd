@@ -25,9 +25,9 @@ var _previous_id = ""
 func _ready() -> void:
 	if course == null: course = CustomCourses.template()
 	_previous_id = course.id
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop())
-	var margin = MarginContainer.new(); margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var margin = MarginContainer.new(); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 50)
 	margin.add_theme_constant_override("margin_top", 36); margin.add_theme_constant_override("margin_bottom", 30)
 	add_child(margin)

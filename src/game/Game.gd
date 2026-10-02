@@ -28,6 +28,7 @@ var profile = {
 	"badges": {},        ## course_id -> true
 	"tech": {},          ## tech id -> unix time discovered
 	"marathon": {},      ## region index -> best cumulative time
+	"tutorial_done": false,
 }
 var settings = {
 	"master_volume": 0.9,
@@ -41,6 +42,11 @@ var settings = {
 	"show_ghost": true,
 	"show_telemetry": false,
 	"show_inputs": false,
+	"reduce_flashes": false,
+	"tuck_toggle": false,
+	"ui_scale": 1.0,
+	"tutorial_hints": true,
+	"bindings": {},      ## action -> {"key": physical keycode, "pad": button index}
 	"invert_steer": false,
 	"units_metric": true,
 	"touch_controls": false,
@@ -100,7 +106,11 @@ func submit_marathon(region: int, total: float) -> bool:
 
 func _ready() -> void:
 	_default_profile = profile.duplicate(true)
+	for a in REMAPPABLE:
+		_default_events[a] = InputMap.action_get_events(a).duplicate() if InputMap.has_action(a) else []
 	load_all()
+	apply_bindings()
+	apply_display_settings.call_deferred()
 
 func set_mode(mode: int) -> void:
 	current_mode = mode
@@ -272,6 +282,7 @@ func load_all() -> void:
 		for k in p.keys(): profile[k] = p[k]
 	if p.has("settings"):
 		for k in p["settings"]: settings[k] = p["settings"][k]
+	if not (settings.get("bindings") is Dictionary): settings["bindings"] = {}
 	if not profile.has("daily"): profile["daily"] = {}
 	if not profile.has("cosmetics"): profile["cosmetics"] = {"equipped": "core", "unlocked": ["core"]}
 	for k in ["badges", "tech", "marathon"]:
@@ -289,7 +300,75 @@ func save_profile() -> void:
 	var out = profile.duplicate(true); out["settings"] = settings; _write_json(profile_path, out)
 func save_presets() -> void: _write_json(PRESET_PATH, presets)
 func set_setting(key: String, value) -> void:
-	settings[key] = value; save_profile(); settings_changed.emit()
+	settings[key] = value; save_profile(); apply_display_settings(); settings_changed.emit()
+
+func apply_display_settings() -> void:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		tree.root.content_scale_factor = clampf(float(settings.get("ui_scale", 1.0)), 0.75, 1.6)
+
+# ---------------------------------------------------------------- remapping
+## Keyboard keys and pad buttons are remappable; stick axes stay as they are.
+const REMAPPABLE = ["steer_left", "steer_right", "lean_forward", "lean_back", "tuck", "brake", "retry", "pause_menu"]
+var _default_events = {}
+
+func binding_text(action: String) -> Dictionary:
+	var key = "—"; var pad = "—"
+	for e in InputMap.action_get_events(action):
+		if e is InputEventKey and key == "—":
+			key = OS.get_keycode_string((e as InputEventKey).physical_keycode if e.physical_keycode != 0 else e.keycode)
+		elif e is InputEventJoypadButton and pad == "—":
+			pad = pad_button_name((e as InputEventJoypadButton).button_index)
+		elif e is InputEventJoypadMotion and pad == "—":
+			var m = e as InputEventJoypadMotion
+			var dir = {0: ["←", "→"], 1: ["↑", "↓"]}.get(m.axis, ["−", "+"])
+			pad = "Left stick " + (dir[0] if m.axis_value < 0.0 else dir[1])
+	return {"key": key, "pad": pad}
+
+static func pad_button_name(i: int) -> String:
+	var names = {0: "A / Cross", 1: "B / Circle", 2: "X / Square", 3: "Y / Triangle", 4: "Select", 6: "Start",
+		7: "L3", 8: "R3", 9: "LB / L1", 10: "RB / R1", 11: "D-pad Up", 12: "D-pad Down", 13: "D-pad Left", 14: "D-pad Right"}
+	return names.get(i, "Button %d" % i)
+
+## Replaces the action's key (or pad button) with `event`, keeping every
+## other binding (axes, the other device).
+func rebind(action: String, event: InputEvent) -> void:
+	if not REMAPPABLE.has(action): return
+	var is_key = event is InputEventKey
+	for e in InputMap.action_get_events(action):
+		if (is_key and e is InputEventKey) or (not is_key and e is InputEventJoypadButton):
+			InputMap.action_erase_event(action, e)
+	InputMap.action_add_event(action, event)
+	var b: Dictionary = settings.get("bindings", {})
+	var entry: Dictionary = b.get(action, {})
+	if is_key: entry["key"] = (event as InputEventKey).physical_keycode
+	else: entry["pad"] = (event as InputEventJoypadButton).button_index
+	b[action] = entry; settings["bindings"] = b
+	save_profile(); settings_changed.emit()
+
+func reset_bindings() -> void:
+	for a in REMAPPABLE:
+		InputMap.action_erase_events(a)
+		for e in _default_events.get(a, []): InputMap.action_add_event(a, e)
+	settings["bindings"] = {}
+	save_profile(); settings_changed.emit()
+
+func apply_bindings() -> void:
+	var b: Dictionary = settings.get("bindings", {})
+	for a in b.keys():
+		var entry: Dictionary = b[a]
+		if entry.has("key"):
+			var k = InputEventKey.new(); k.physical_keycode = int(entry["key"]); rebind_silent(a, k)
+		if entry.has("pad"):
+			var p = InputEventJoypadButton.new(); p.button_index = int(entry["pad"]); rebind_silent(a, p)
+
+func rebind_silent(action: String, event: InputEvent) -> void:
+	if not REMAPPABLE.has(action) or not InputMap.has_action(action): return
+	var is_key = event is InputEventKey
+	for e in InputMap.action_get_events(action):
+		if (is_key and e is InputEventKey) or (not is_key and e is InputEventJoypadButton):
+			InputMap.action_erase_event(action, e)
+	InputMap.action_add_event(action, event)
 
 static func _read_json(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path): return {}

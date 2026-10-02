@@ -46,6 +46,7 @@ run_gate "replay determinism" "$GODOT_BIN" --headless --fixed-fps 120 --path "$R
 run_gate "speedrun suite" "$GODOT_BIN" --headless --fixed-fps 120 --path "$ROOT" -- --speedrun-test
 run_gate "community courses" "$GODOT_BIN" --headless --fixed-fps 120 --path "$ROOT" -- --community-test
 run_gate "multiplayer" "$GODOT_BIN" --headless --fixed-fps 60 --path "$ROOT" -- --net-test
+run_gate "presentation" "$GODOT_BIN" --headless --fixed-fps 120 --path "$ROOT" -- --presentation-test
 run_gate "playtest harness" "$GODOT_BIN" --headless --path "$ROOT" -- --harness-test
 
 echo "== all gates passed =="

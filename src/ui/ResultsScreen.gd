@@ -16,11 +16,11 @@ var result = {}
 var course: CourseData
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(UiKit.backdrop(0.86))
 
 	var margin = MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 110)
 	margin.add_theme_constant_override("margin_right", 110)
 	margin.add_theme_constant_override("margin_top", 56)

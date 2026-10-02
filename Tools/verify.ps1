@@ -37,5 +37,6 @@ Invoke-Gate 'replay determinism' @('--headless', '--fixed-fps', '120', '--path',
 Invoke-Gate 'speedrun suite' @('--headless', '--fixed-fps', '120', '--path', $Root, '--', '--speedrun-test')
 Invoke-Gate 'community courses' @('--headless', '--fixed-fps', '120', '--path', $Root, '--', '--community-test')
 Invoke-Gate 'multiplayer' @('--headless', '--fixed-fps', '60', '--path', $Root, '--', '--net-test')
+Invoke-Gate 'presentation' @('--headless', '--fixed-fps', '120', '--path', $Root, '--', '--presentation-test')
 Invoke-Gate 'playtest harness' @('--headless', '--path', $Root, '--', '--harness-test')
 Write-Host '== all gates passed =='

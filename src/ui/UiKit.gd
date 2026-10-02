@@ -24,13 +24,13 @@ const MONO = 20
 
 static func root_control() -> Control:
 	var c = Control.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.mouse_filter = Control.MOUSE_FILTER_PASS
 	return c
 
 static func backdrop(alpha: float = 1.0) -> ColorRect:
 	var r = ColorRect.new()
-	r.set_anchors_preset(Control.PRESET_FULL_RECT)
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	r.color = Color(BG.r, BG.g, BG.b, alpha)
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return r
@@ -121,7 +121,7 @@ static func bar(value: float, color: Color = LINE, width: float = 220.0) -> Cont
 	wrap.custom_minimum_size = Vector2(width, 10)
 	var back = ColorRect.new()
 	back.color = Color(1, 1, 1, 0.08)
-	back.set_anchors_preset(Control.PRESET_FULL_RECT)
+	back.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	wrap.add_child(back)
 	var fill = ColorRect.new()
 	fill.color = color
@@ -130,9 +130,29 @@ static func bar(value: float, color: Color = LINE, width: float = 220.0) -> Cont
 	wrap.add_child(fill)
 	return wrap
 
+## Pins a control to a screen corner/edge/centre. `inset` pushes it inward
+## from that anchor (pixels), and the control grows away from the anchor as
+## its content sizes it, so nothing ever lands off-screen.
+static func pin(c: Control, preset: int, inset: Vector2 = Vector2.ZERO) -> void:
+	c.set_anchors_preset(preset)
+	var ax = c.anchor_left
+	var ay = c.anchor_top
+	if ax >= 1.0:
+		c.grow_horizontal = Control.GROW_DIRECTION_BEGIN; c.offset_left = -inset.x; c.offset_right = -inset.x
+	elif ax <= 0.0:
+		c.grow_horizontal = Control.GROW_DIRECTION_END; c.offset_left = inset.x; c.offset_right = inset.x
+	else:
+		c.grow_horizontal = Control.GROW_DIRECTION_BOTH; c.offset_left = inset.x; c.offset_right = inset.x
+	if ay >= 1.0:
+		c.grow_vertical = Control.GROW_DIRECTION_BEGIN; c.offset_top = -inset.y; c.offset_bottom = -inset.y
+	elif ay <= 0.0:
+		c.grow_vertical = Control.GROW_DIRECTION_END; c.offset_top = inset.y; c.offset_bottom = inset.y
+	else:
+		c.grow_vertical = Control.GROW_DIRECTION_BOTH; c.offset_top = inset.y; c.offset_bottom = inset.y
+
 static func centered(child: Control) -> CenterContainer:
 	var c = CenterContainer.new()
-	c.set_anchors_preset(Control.PRESET_FULL_RECT)
+	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	c.add_child(child)
 	return c
 

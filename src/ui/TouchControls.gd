@@ -16,20 +16,18 @@ func bind(player: SlideBody) -> void:
 	slider.external_input = Callable(self, "_feed_input")
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var tuck = Button.new()
 	tuck.text = "TUCK"
-	tuck.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	tuck.position = Vector2(-220, -140)
+	UiKit.pin(tuck, Control.PRESET_BOTTOM_RIGHT, Vector2(140, 50))
 	tuck.custom_minimum_size = Vector2(90, 90)
 	tuck.button_down.connect(func(): _tuck = true)
 	tuck.button_up.connect(func(): _tuck = false)
 	add_child(tuck)
 	var brake = Button.new()
 	brake.text = "BRAKE"
-	brake.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	brake.position = Vector2(-115, -140)
+	UiKit.pin(brake, Control.PRESET_BOTTOM_RIGHT, Vector2(36, 50))
 	brake.custom_minimum_size = Vector2(90, 90)
 	brake.button_down.connect(func(): _brake = true)
 	brake.button_up.connect(func(): _brake = false)
