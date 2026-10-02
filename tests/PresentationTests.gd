@@ -42,6 +42,17 @@ func _rider() -> void:
 		await get_tree().process_frame
 		var box = RiderModel._aabb(real, Transform3D.IDENTITY)
 		check("Ed's model (art/ed/ed.glb) loads at riding height", real.is_imported and absf(box.size.y - RiderModel.HEIGHT * RiderModel.RIDE_SCALE) < 0.01, str(box.size))
+		if real._rig:
+			var sk: Skeleton3D = real._rig.skel
+			var bone = func(n): return sk.get_bone_global_pose(sk.find_bone(n)).origin
+			real.pose(0.0, 0.0, 0.5)
+			var lf: Vector3 = bone.call("LeftFoot"); var rf: Vector3 = bone.call("RightFoot"); var hips: Vector3 = bone.call("Hips")
+			check("rigged Ed rides side-on, feet spread along the board", absf(lf.z - rf.z) > 3.0 * absf(lf.x - rf.x), "%s %s" % [lf, rf])
+			real.pose(1.0, 0.0, 1.0)
+			check("tuck lowers rigged Ed", bone.call("Hips").y < hips.y)
+			check("feet stay planted through the tuck", bone.call("LeftFoot").distance_to(lf) < hips.y * 0.01, str(bone.call("LeftFoot")))
+			real.pose(1.0, 1.0, 1.0)
+			check("rig poses are finite at the extremes", bone.call("LeftHand").is_finite() and bone.call("Head").is_finite())
 		real.queue_free()
 
 	# A 2 m tall model exported at runtime is normalised to Ed's 1.2 m.

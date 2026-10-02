@@ -26,8 +26,17 @@ Drop-in
 
 ## Current model
 
-`art/ed/ed.glb` was generated from `01_ed_front_render_TPOSE.png` (background
-removed) with **Hunyuan 3D 2.1** through Scenario: 15,000 triangles, one
-textured mesh, static T-pose (no rig yet). Meshy 7.1 needs a Scenario Pro
-plan. To replace the model, overwrite `art/ed/ed.glb`; the game normalises
-any GLB to riding height automatically.
+`art/ed/ed.glb` is Meshy's multi-image model of Ed (task `01a0fdee…`),
+remeshed to ~15.5k triangles (`01a0fedc…`) and auto-rigged (`01a0fede…`):
+one skinned mesh, 24-bone humanoid skeleton, PBR textures (albedo, normal,
+metal/rough) repacked to 2K/1K JPEG to keep the file at ~5.5 MB.
+
+The game poses the skeleton procedurally (`src/player/EdRig.gd`): a
+side-on, regular-footed board stance with the shoulders opened toward the
+nose, IK-planted feet, a low tuck, and arms thrown wide in the air. Meshy's
+baked animation clip is not used. Any GLB with the same Meshy bone names
+gets the stance; other models are shown as authored.
+
+To replace the model: rig it in Meshy (remesh to <=300k faces first), export
+GLB, and overwrite `art/ed/ed.glb`. `preview_ed_ingame.png` is the
+`-- --ed-preview` render.

@@ -9,7 +9,9 @@ extends Node3D
 ##
 ## Either way the rider is posed procedurally from the motor's state: crouch
 ## and arm balance on the ground, a tighter shape when tucking, arms up in the
-## air, a squash on landing. Lean into turns comes from SlideBody's roll.
+## air, a squash on landing. Lean into turns comes from SlideBody's roll. A
+## rigged model rides side-on in a board stance (see EdRig); a static one is
+## shown as authored.
 
 const GLB_PATH = "res://art/ed/ed.glb"
 ## Where the rider model comes from. A res:// path is imported by Godot; any
@@ -44,6 +46,8 @@ var _glow: Array[StandardMaterial3D] = []
 var _squash = 0.0
 var _pose_tuck = 0.0
 var _pose_air = 0.0
+var _clock = 0.0
+var _rig: EdRig = null                ## set when the model has Ed's skeleton
 
 func _ready() -> void:
 	# Chibi proportions at 0.62 keep the horizon clear for the tuned chase cam.
@@ -77,14 +81,43 @@ func _load_glb() -> bool:
 	inst.position = Vector3(-box.get_center().x * s, FEET_Y - box.position.y * s, box.get_center().z * s)
 	for mi in inst.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		_unbake_light(mi)
+	var skels = inst.find_children("*", "Skeleton3D", true, false)
+	if not skels.is_empty():
+		_rig = EdRig.create(skels[0])
+	if _rig:
+		for ap in inst.find_children("*", "AnimationPlayer", true, false):
+			(ap as AnimationPlayer).stop()
+		pose(0.0, 0.0, 0.6)
 	return true
+
+## Meshy exports bake the lit colour into an emissive copy of the albedo, which
+## would make Ed glow flat under the course lighting. The game lights him.
+static func _unbake_light(mi: MeshInstance3D) -> void:
+	if mi.mesh == null: return
+	for i in mi.mesh.get_surface_count():
+		var m = mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if m and m.emission_enabled:
+			var own = m.duplicate() as BaseMaterial3D
+			own.emission_enabled = false
+			own.rim_enabled = true; own.rim = 0.3; own.rim_tint = 0.5
+			mi.set_surface_override_material(i, own)
 
 static func _aabb(n: Node, xf: Transform3D) -> AABB:
 	var out = AABB()
 	var first = true
 	var t = xf * (n.transform if n is Node3D else Transform3D.IDENTITY)
 	if n is MeshInstance3D and n.mesh:
-		var b = t * (n as MeshInstance3D).get_aabb()
+		var mi := n as MeshInstance3D
+		var mt = t
+		# A skinned mesh renders in its skeleton's space through the bind
+		# poses, not through its own node transform.
+		if mi.skin and mi.skin.get_bind_count() > 0 and mi.get_parent() is Skeleton3D:
+			var sk := mi.get_parent() as Skeleton3D
+			var bone = mi.skin.get_bind_bone(0)
+			if bone < 0: bone = sk.find_bone(mi.skin.get_bind_name(0))
+			if bone >= 0: mt = xf * sk.get_bone_global_rest(bone) * mi.skin.get_bind_pose(0)
+		var b = mt * mi.get_aabb()
 		out = b; first = false
 	for c in n.get_children():
 		var cb = _aabb(c, t)
@@ -172,6 +205,8 @@ func _span(name: String, a: Vector3, b: Vector3) -> void:
 ## tuck 0..1, air 0..1, ground speed fraction 0..1. Positions are in the
 ## board's frame: -Z is the direction of travel.
 func pose(tuck: float, air: float, speed_t: float) -> void:
+	if _rig:
+		_rig.pose(tuck, air, speed_t, _squash, _clock); return
 	if is_imported or _parts.is_empty(): return
 	var crouch = lerpf(0.0, 0.16, tuck) + 0.06 * speed_t
 	var squash = _squash
@@ -227,6 +262,7 @@ func land(quality: float, speed: float) -> void:
 	_squash = clampf(speed / 40.0, 0.2, 1.0) * (1.2 - clampf(quality, 0.0, 1.0))
 
 func animate(delta: float, tuck: float, grounded: bool, speed_t: float) -> void:
+	_clock += delta
 	_squash = move_toward(_squash, 0.0, delta * 3.0)
 	_pose_tuck = lerpf(_pose_tuck, tuck, clampf(delta * 10.0, 0.0, 1.0))
 	_pose_air = lerpf(_pose_air, 0.0 if grounded else 1.0, clampf(delta * 6.0, 0.0, 1.0))
