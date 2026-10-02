@@ -15,6 +15,13 @@ func _ready() -> void:
 		var unlocked = Game.region_unlocked(r)
 		regions.add_child(UiKit.label("%s   %s" % [info["name"], "" if unlocked else "LOCKED · %d MEDALS" % int(info["gate"])], UiKit.H3, UiKit.LINE if unlocked else UiKit.TEXT_DIM))
 		if not unlocked: continue
+		if Game.current_mode == Game.Mode.MARATHON:
+			var row = HBoxContainer.new(); row.add_theme_constant_override("separation", 18); regions.add_child(row)
+			var region_i = r
+			var go = UiKit.button("RUN %s" % info["name"], true); go.pressed.connect(func(): Main.instance.start_marathon(region_i)); row.add_child(go)
+			row.add_child(UiKit.label("BEST  " + RunController.format_time(Game.marathon_best(r)), UiKit.H3, UiKit.LINE))
+			if first == null: first = go
+			continue
 		var grid = GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation",8); grid.add_theme_constant_override("v_separation",8); regions.add_child(grid)
 		for course in Courses.region_courses(r):
 			var card = _card(course); grid.add_child(card)
@@ -31,6 +38,8 @@ func _card(course: CourseData) -> PanelContainer:
 	col.add_child(UiKit.row("BEST", RunController.format_time(float(rec["best_time"])), UiKit.LINE))
 	col.add_child(UiKit.row("RANK", str(rec["best_rank"]) if str(rec["best_rank"])!="" else "—", Rank.color_for(str(rec["best_rank"]))))
 	col.add_child(UiKit.row("MEDAL", str(rec["best_medal"]) if str(rec["best_medal"])!="" else "—", course.medal_color(str(rec["best_medal"]))))
+	if Game.has_badge(course.id):
+		col.add_child(UiKit.label("CHICK BADGE FOUND", 11, Color(1.0, 0.86, 0.22)))
 	if course.medal_source != "probe":
 		col.add_child(UiKit.label("PROVISIONAL TARGETS", 11, UiKit.WARN))
 	if course.signature_moment != "":

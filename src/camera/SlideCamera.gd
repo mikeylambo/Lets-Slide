@@ -175,7 +175,7 @@ func _probe_ahead(travel_yaw: float) -> Dictionary:
 	var space = target.get_world_3d().direct_space_state
 	var fwd = Vector3(sin(travel_yaw), 0.0, cos(travel_yaw)).normalized()
 	var origin = target.global_position + fwd * params.terrain_anticipation + Vector3.UP * 7.0
-	var q = PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * 240.0)
+	var q = PhysicsRayQueryParameters3D.create(origin, origin + Vector3.DOWN * 240.0, SlideBody.WORLD_MASK)
 	q.exclude = [target.get_rid()]
 	var hit = space.intersect_ray(q)
 	if hit.is_empty(): return {"drop": 38.0}
@@ -190,7 +190,7 @@ func _predict_landing() -> Dictionary:
 	for i in 34:
 		var next = p + v * dt
 		v.y -= g * dt
-		var q = PhysicsRayQueryParameters3D.create(p, next)
+		var q = PhysicsRayQueryParameters3D.create(p, next, SlideBody.WORLD_MASK)
 		q.exclude = [target.get_rid()]
 		var hit = space.intersect_ray(q)
 		if not hit.is_empty(): return {"point": hit["position"], "time": float(i) * dt}

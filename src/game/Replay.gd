@@ -23,6 +23,8 @@ var hz = 120
 var finish_ticks = -1                ## -1 = unfinished / aborted
 var finished = false
 var recorded_at = ""
+var splits: Array = []               ## race time at each checkpoint + finish
+var respawns: Array = []             ## [tick, x, y, z, yaw, vx, vy, vz]: resets the run controller applied
 var _bytes = PackedByteArray()
 
 static func begin_for(course: String, motor: MotorParams) -> Replay:
@@ -73,7 +75,7 @@ func valid() -> bool:
 # ------------------------------------------------------------ serialization
 func to_bytes() -> PackedByteArray:
 	var meta = {"v": VERSION, "course": course_id, "params": params, "hz": hz,
-		"finish_ticks": finish_ticks, "finished": finished, "at": recorded_at}
+		"finish_ticks": finish_ticks, "finished": finished, "at": recorded_at, "splits": splits, "respawns": respawns}
 	var raw = var_to_bytes({"meta": meta, "inputs": _bytes})
 	var packed = raw.compress(FileAccess.COMPRESSION_ZSTD)
 	var out = MAGIC.to_ascii_buffer()
@@ -104,6 +106,8 @@ static func from_bytes(data: PackedByteArray) -> Replay:
 	r.finish_ticks = int(meta.get("finish_ticks", -1))
 	r.finished = bool(meta.get("finished", false))
 	r.recorded_at = str(meta.get("at", ""))
+	r.splits = meta.get("splits", []) if meta.get("splits") is Array else []
+	r.respawns = meta.get("respawns", []) if meta.get("respawns") is Array else []
 	r._bytes = d["inputs"]
 	return r
 

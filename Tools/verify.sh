@@ -43,6 +43,7 @@ fi
 run_gate "unit tests" "$GODOT_BIN" --headless --path "$ROOT" -- --unit
 run_gate "smoke test" "$GODOT_BIN" --headless --path "$ROOT" -- --smoke
 run_gate "replay determinism" "$GODOT_BIN" --headless --fixed-fps 120 --path "$ROOT" -- --replay-test
+run_gate "speedrun suite" "$GODOT_BIN" --headless --fixed-fps 120 --path "$ROOT" -- --speedrun-test
 run_gate "playtest harness" "$GODOT_BIN" --headless --path "$ROOT" -- --harness-test
 
 echo "== all gates passed =="

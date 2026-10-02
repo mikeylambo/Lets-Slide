@@ -47,6 +47,17 @@ static func build(course: CourseData, author_avg_speed: float = 32.0) -> Diction
 	if course.mastery_count > 0:
 		mastery = _place(builder, props, pickups, length * 0.70, 7.5, 6.8, Pickup.Kind.MASTERY, 1800 + course.region_index * 350)
 
+	# One chick badge per course, hidden off the racing line: on the far edge
+	# of the ribbon beyond the halfway point, at riding height. Always
+	# reachable on the ground; only found by riders who read the whole width.
+	var badge: Pickup = null
+	var badge_frame = _badge_frame(builder)
+	if not badge_frame.is_empty():
+		badge = Pickup.new(Pickup.Kind.BADGE, 0)
+		props.add_child(badge)
+		badge.position = badge_frame["pos"]
+		pickups.append(badge)
+
 	var checkpoints: Array[TrackTrigger] = []
 	var cp_count = 7 if course.is_descent else 4
 	for i in range(cp_count):
@@ -66,7 +77,7 @@ static func build(course: CourseData, author_avg_speed: float = 32.0) -> Diction
 	var start_pos: Vector3 = start_frame["pos"] + start_frame["u"] * 0.65
 	var start_yaw: float = atan2(start_frame["f"].x, start_frame["f"].z)
 	return {
-		"root": root, "builder": builder, "pickups": pickups, "mastery": mastery,
+		"root": root, "builder": builder, "pickups": pickups, "mastery": mastery, "badge": badge,
 		"checkpoints": checkpoints, "finish": finish, "start_position": start_pos,
 		"start_yaw": start_yaw, "length": length, "beat_map": builder.beat_map.duplicate(), "kill_y": _lowest_y(builder) - 90.0,
 	}
@@ -97,6 +108,31 @@ static func _add_route_beacons(b: TrackBuilder, parent: Node3D, from_d: float, t
 		mi.material_override = mat
 		mi.position = f["pos"] + f["r"] * lateral + f["u"] * 1.2
 		parent.add_child(mi)
+
+## Deterministic hidden spot: the widest plain-ribbon segment in 55–80% of
+## the course (widening the window if none qualifies), pushed to the edge on
+## the side away from the turn.
+static func _badge_frame(b: TrackBuilder) -> Dictionary:
+	for window in [[0.55, 0.80], [0.35, 0.92], [0.15, 0.97]]:
+		var f = _badge_in(b, window[0], window[1])
+		if not f.is_empty(): return f
+	return {}
+
+static func _badge_in(b: TrackBuilder, lo: float, hi: float) -> Dictionary:
+	var best: Dictionary = {}
+	var best_w = -1.0
+	for info in b.segment_ranges:
+		var kind = str(info["kind"])
+		if kind in ["gap", "fullpipe", "corkscrew", "shaft", "tunnel", "split", "transfer", "hazard"]: continue
+		var mid = (float(info["from"]) + float(info["to"])) * 0.5
+		if mid < b.total_length * lo or mid > b.total_length * hi: continue
+		var w = float(info["seg"].get("width", 14.0))
+		if w > best_w:
+			best_w = w
+			var s = b.sample_at(mid)
+			var side = -1.0 if float(info["seg"].get("turn", 0.0)) > 0.0 else 1.0
+			best = {"pos": s["pos"] + s["r"] * (side * w * 0.40) + s["u"] * 1.5}
+	return best
 
 static func _lowest_y(b: TrackBuilder) -> float:
 	var lowest = INF

@@ -41,7 +41,9 @@ func _process(_delta: float) -> void:
 				check("course scene instanced", _scene != null)
 			if _frames == 14:
 				_start_pos = _scene.slider.global_position
-			if _frames > 620:
+			if _frames == 60:
+				check("rider holds still until GO", _scene.run.state != RunController.State.COUNTDOWN or _scene.slider.global_position.distance_to(_start_pos) < 0.001)
+			if _frames > 900:
 				var moved: float = _start_pos.distance_to(_scene.slider.global_position)
 				check("run controller running", _scene.run.state == RunController.State.RUNNING, str(_scene.run.state))
 				# With no input the slider only has the 6° start pad to work with,

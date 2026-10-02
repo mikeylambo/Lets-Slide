@@ -12,6 +12,11 @@ signal bonked(speed: float)
 signal model_changed(model: int)
 
 const BODY_RADIUS = 0.45
+## Terrain lives on layer 1; riders live on layer 2 and only collide with
+## terrain, so any number of riders (player, replay rival, net peers) ride
+## through each other and never change each other's physics.
+const WORLD_MASK = 1
+const RIDER_LAYER = 2
 const MAX_SLIDE_ITERATIONS = 4
 
 var params: MotorParams
@@ -23,6 +28,8 @@ var reference_motor = Sm64Motor.new()
 var active_motor: RefCounted
 
 var control_enabled = true
+var is_player = true                ## false for replay rivals: they never trigger gates or pickups
+var ghost_tint = Color(0, 0, 0, 0)  ## alpha > 0 renders the rider as a translucent ghost
 var camera_basis = Basis.IDENTITY   ## set by the camera each frame
 var external_input = Callable()     ## optional: drives input instead of the device
 var input_tap = Callable()          ## optional: sees the final input packet every controlled tick
@@ -54,6 +61,8 @@ func _build_body() -> void:
 	# We resolve collisions ourselves; the built-in floor logic would fight the
 	# motor's surface handling.
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
+	collision_layer = RIDER_LAYER
+	collision_mask = WORLD_MASK
 	safe_margin = 0.02
 
 func _build_visual() -> void:
@@ -67,6 +76,8 @@ func _build_visual() -> void:
 	_board.mesh = board_mesh
 	_board.position = Vector3(0, -0.36, 0)
 	var palette = Game.cosmetic_palette()
+	if ghost_tint.a > 0.0:
+		palette = {"board": ghost_tint, "core": ghost_tint.lightened(0.25)}
 	_board.material_override = _neon_material(palette["board"], 1.8)
 	_visual.add_child(_board)
 
@@ -84,8 +95,16 @@ func _build_visual() -> void:
 	_trail.top_level = true
 	add_child(_trail)
 
-static func _neon_material(c: Color, energy: float) -> StandardMaterial3D:
+func _neon_material(c: Color, energy: float) -> StandardMaterial3D:
 	var m = StandardMaterial3D.new()
+	if ghost_tint.a > 0.0:
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.albedo_color = Color(c.r, c.g, c.b, ghost_tint.a)
+		m.emission_enabled = true
+		m.emission = c
+		m.emission_energy_multiplier = energy * 0.6
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		return m
 	m.albedo_color = c.darkened(0.55)
 	m.emission_enabled = true
 	m.emission = c
@@ -231,7 +250,7 @@ func _probe_ground() -> void:
 		for off in offsets:
 			var from: Vector3 = global_position + off
 			var to: Vector3 = from + probe_dir * (reach + 0.28)
-			var q = PhysicsRayQueryParameters3D.create(from, to)
+			var q = PhysicsRayQueryParameters3D.create(from, to, WORLD_MASK)
 			q.exclude = [get_rid()]
 			q.collide_with_areas = false
 			var hit = space.intersect_ray(q)
@@ -293,7 +312,7 @@ func _snap_to_ground() -> void:
 	var probe_dir = -state.floor_normal.normalized()
 	var from = global_position
 	var to = from + probe_dir * (BODY_RADIUS + params.ground_snap_distance + params.edge_tolerance + 0.35)
-	var q = PhysicsRayQueryParameters3D.create(from, to)
+	var q = PhysicsRayQueryParameters3D.create(from, to, WORLD_MASK)
 	q.exclude = [get_rid()]
 	var hit = space.intersect_ray(q)
 	if hit.is_empty():

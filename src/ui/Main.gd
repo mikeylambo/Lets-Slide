@@ -34,6 +34,9 @@ func _ready() -> void:
 	if "--export-courses" in args:
 		add_child(load("res://tests/CourseExporter.gd").new())
 		return
+	if "--speedrun-test" in args:
+		add_child(load("res://tests/SpeedrunTests.gd").new())
+		return
 	if "--replay-test" in args:
 		add_child(load("res://tests/ReplayTests.gd").new())
 		return
@@ -62,15 +65,21 @@ static func harness_available() -> bool:
 
 func current_world() -> Node: return _world_child
 
-func play_course(data: CourseData, params_override: MotorParams = null) -> void:
+## opts: {"rival": Replay} races a recorded run, {"watch": Replay} plays one back.
+func play_course(data: CourseData, params_override: MotorParams = null, opts: Dictionary = {}) -> void:
 	_set_screen(null); _clear_world()
 	var scene = CourseScene.new(); scene.course = data; scene.params_override = params_override
+	scene.rival_replay = opts.get("rival"); scene.watch_replay = opts.get("watch")
 	_world_child = scene; world.add_child(scene)
 
 func start_daily() -> void:
 	Game.set_mode(Game.Mode.DAILY); play_course(CourseGenerator.daily())
 func start_endless() -> void:
 	Game.set_mode(Game.Mode.ENDLESS); play_course(CourseGenerator.endless(Game.endless_prestige))
+func start_marathon(region: int) -> void:
+	Game.start_marathon(region); play_course(Courses.region_courses(region)[0])
+func show_run_codes() -> void: _clear_world(); _set_screen(RunCodeScreen.new())
+func show_codex() -> void: _set_screen(CodexScreen.new())
 func start_survival() -> void:
 	Game.set_mode(Game.Mode.SURVIVAL); Game.survival_lives = 3; Game.survival_course_index = 0; play_course(Courses.all()[0])
 
@@ -85,6 +94,9 @@ func next_mode_course() -> void:
 			Game.profile["prestige"] = maxi(int(Game.profile.get("prestige",0)), Game.endless_prestige)
 			Game.save_profile(); play_course(CourseGenerator.endless(Game.endless_prestige))
 		Game.Mode.DAILY: start_daily()
+		Game.Mode.MARATHON:
+			var list = Courses.region_courses(int(Game.marathon["region"]))
+			play_course(list[int(Game.marathon["index"])])
 		_: show_course_select()
 
 func open_lab() -> void:

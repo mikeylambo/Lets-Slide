@@ -35,6 +35,12 @@ func _ready() -> void:
 	var new_record: bool = beaten.get("time", false)
 
 	col.add_child(UiKit.title("FINISH" if bool(result.get("finished", false)) else "RUN OVER", "%s · %s" % [Game.mode_name(), course.title]))
+	if result.has("marathon_total"):
+		var mt = float(result["marathon_total"]); var mp = float(result.get("marathon_previous", 0.0))
+		var line = "REGION RUN  %s" % RunController.format_time(mt)
+		if bool(result.get("marathon_new_best", false)): line += "   NEW BEST" + ("  −%.3f" % (mp - mt) if mp > 0.0 else "")
+		elif mp > 0.0: line += "   +%.3f off best" % (mt - mp)
+		col.add_child(UiKit.label(line, UiKit.H3, UiKit.GOOD if bool(result.get("marathon_new_best", false)) else UiKit.WARN))
 	col.add_child(UiKit.spacer(6))
 
 	var top = HBoxContainer.new()
@@ -80,6 +86,7 @@ func _ready() -> void:
 	right.add_child(_bar_row("MOMENTUM", float(bd.get("momentum_score", 0.0)), UiKit.GOOD))
 	right.add_child(_bar_row("SCORE", float(bd.get("score_score", 0.0)), UiKit.WARN))
 	right.add_child(_bar_row("MASTERY", float(bd.get("mastery_score", 0.0)), UiKit.ACCENT))
+	_add_splits(right)
 
 	# --- stats --------------------------------------------------------------
 	col.add_child(UiKit.spacer(10))
@@ -150,6 +157,33 @@ func _ready() -> void:
 	modulate.a = 0.0
 	var tw = create_tween()
 	tw.tween_property(self, "modulate:a", 1.0, 0.16)
+
+## LiveSplit-style table: each checkpoint, its delta to the PB run, gold where
+## the segment was a best ever; then sum of best and any raced rival.
+func _add_splits(parent: VBoxContainer) -> void:
+	var s: Array = result.get("splits", [])
+	if s.is_empty() or not bool(result.get("finished", false)): return
+	var pb: Array = result.get("pb_splits", [])
+	var golds: Array = result.get("split_golds", [])
+	parent.add_child(UiKit.spacer(8))
+	parent.add_child(UiKit.label("SPLITS", UiKit.BODY, UiKit.TEXT_DIM))
+	for i in s.size():
+		if float(s[i]) < 0.0: continue
+		var name = "FINISH" if i == s.size() - 1 else "CP %d" % (i + 1)
+		var text = RunController.format_time(float(s[i]))
+		var color = UiKit.TEXT
+		if i < pb.size() and float(pb[i]) > 0.0:
+			var d = float(s[i]) - float(pb[i])
+			text += "   %s%.2f" % ["+" if d >= 0.0 else "−", absf(d)]
+			color = UiKit.GOOD if d < 0.0 else UiKit.WARN
+		if i < golds.size() and bool(golds[i]): color = Color(1.0, 0.82, 0.3)
+		parent.add_child(UiKit.row(name, text, color, 14))
+	var sob = RunController.sum_of_best(Game.record_for(course.id).get("best_segments", []))
+	if sob > 0.0: parent.add_child(UiKit.row("SUM OF BEST", RunController.format_time(sob), UiKit.LINE, 14))
+	var rt = float(result.get("rival_time", 0.0))
+	if rt > 0.0:
+		var d = float(result.get("time", 0.0)) - rt
+		parent.add_child(UiKit.row("VS RIVAL", "%s%.3f" % ["+" if d >= 0.0 else "−", absf(d)], UiKit.GOOD if d < 0.0 else UiKit.WARN, 14))
 
 func _bar_row(text: String, value: float, color: Color) -> HBoxContainer:
 	var h = HBoxContainer.new()

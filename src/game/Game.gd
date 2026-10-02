@@ -6,9 +6,11 @@ signal mode_changed(mode: int)
 signal progression_changed()
 
 const PROFILE_PATH = "user://profile.json"
+var profile_path = PROFILE_PATH
+var _default_profile = {}
 const PRESET_PATH = "user://presets.json"
 
-enum Mode { CAMPAIGN, TIME_TRIAL, SCORE_ATTACK, SURVIVAL, DAILY, ENDLESS }
+enum Mode { CAMPAIGN, TIME_TRIAL, SCORE_ATTACK, SURVIVAL, DAILY, ENDLESS, MARATHON }
 
 var current_mode: int = Mode.CAMPAIGN
 ## Developer tools (Movement Lab, SM64 reference model, course inspector) exist
@@ -23,6 +25,9 @@ var profile = {
 	"daily": {},
 	"cosmetics": {"equipped": "core", "unlocked": ["core"]},
 	"prestige": 0,
+	"badges": {},        ## course_id -> true
+	"tech": {},          ## tech id -> unix time discovered
+	"marathon": {},      ## region index -> best cumulative time
 }
 var settings = {
 	"master_volume": 0.9,
@@ -48,8 +53,49 @@ var last_result = {}
 var survival_lives = 3
 var survival_course_index = 0
 var endless_prestige = 0
+## Region Run state: five courses back to back on one cumulative clock.
+var marathon = {"region": 0, "index": 0, "total": 0.0, "splits": []}
+
+# ------------------------------------------------------------ chick badges
+func has_badge(course_id: String) -> bool:
+	return bool(profile["badges"].get(course_id, false))
+
+## Returns true the first time a badge is found.
+func collect_badge(course_id: String) -> bool:
+	if has_badge(course_id): return false
+	profile["badges"][course_id] = true
+	save_profile(); progression_changed.emit()
+	return true
+
+func badge_total() -> int:
+	return profile["badges"].size()
+
+# -------------------------------------------------------------- tech codex
+func discover_tech(id: String) -> bool:
+	if profile["tech"].has(id): return false
+	profile["tech"][id] = int(Time.get_unix_time_from_system())
+	save_profile(); progression_changed.emit()
+	return true
+
+# ---------------------------------------------------------------- marathon
+func start_marathon(region: int) -> void:
+	set_mode(Mode.MARATHON)
+	marathon = {"region": region, "index": 0, "total": 0.0, "splits": []}
+
+func marathon_best(region: int) -> float:
+	return float(profile["marathon"].get(str(region), 0.0))
+
+## Records a finished region run; returns true for a new best.
+func submit_marathon(region: int, total: float) -> bool:
+	var best = marathon_best(region)
+	if best <= 0.0 or total < best:
+		profile["marathon"][str(region)] = total
+		save_profile()
+		return true
+	return false
 
 func _ready() -> void:
+	_default_profile = profile.duplicate(true)
 	load_all()
 
 func set_mode(mode: int) -> void:
@@ -70,6 +116,7 @@ func mode_name(mode: int = -1) -> String:
 		Mode.SURVIVAL: return "SURVIVAL"
 		Mode.DAILY: return "DAILY DESCENT"
 		Mode.ENDLESS: return "ENDLESS"
+		Mode.MARATHON: return "REGION RUN"
 	return "PLAY"
 
 # ------------------------------------------------------------------ records
@@ -94,7 +141,9 @@ func submit_result(course_id: String, result: Dictionary) -> Dictionary:
 		if t > 0.0 and (float(rec["best_time"]) <= 0.0 or t < float(rec["best_time"])):
 			rec["best_time"] = t
 			rec["best_medal"] = str(result.get("medal", ""))
+			rec["splits"] = result.get("splits", [])
 			beaten["time"] = true
+		_update_best_segments(rec, result.get("splits", []))
 		var sc = int(result.get("score", 0))
 		if sc > int(rec["best_score"]): rec["best_score"] = sc; beaten["score"] = true
 		var pk = int(result.get("pickups", 0))
@@ -117,6 +166,15 @@ func submit_result(course_id: String, result: Dictionary) -> Dictionary:
 	records_changed.emit(course_id)
 	progression_changed.emit()
 	return beaten
+
+func _update_best_segments(rec: Dictionary, splits: Array) -> void:
+	var best: Array = rec.get("best_segments", [])
+	if best.size() != splits.size():
+		best = []; best.resize(splits.size()); best.fill(0.0)
+	for i in splits.size():
+		var seg = RunController.segment_time(splits, i)
+		if seg > 0.0 and (float(best[i]) <= 0.0 or seg < float(best[i])): best[i] = seg
+	rec["best_segments"] = best
 
 func medal_total() -> int:
 	var total = 0
@@ -205,18 +263,26 @@ func preset_names() -> Array:
 
 # ----------------------------------------------------------------- storage
 func load_all() -> void:
-	var p = _read_json(PROFILE_PATH)
+	var p = _read_json(profile_path)
 	if p.has("records"):
 		for k in p.keys(): profile[k] = p[k]
 	if p.has("settings"):
 		for k in p["settings"]: settings[k] = p["settings"][k]
 	if not profile.has("daily"): profile["daily"] = {}
 	if not profile.has("cosmetics"): profile["cosmetics"] = {"equipped": "core", "unlocked": ["core"]}
+	for k in ["badges", "tech", "marathon"]:
+		if not (profile.get(k) is Dictionary): profile[k] = {}
 	presets = _read_json(PRESET_PATH)
 	if presets.is_empty(): presets = _factory_presets(); save_presets()
 
+## Tests call this so they never touch the player's real profile.
+func use_sandbox_profile() -> void:
+	profile_path = "user://sandbox_profile.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(profile_path))
+	profile = _default_profile.duplicate(true)
+
 func save_profile() -> void:
-	var out = profile.duplicate(true); out["settings"] = settings; _write_json(PROFILE_PATH, out)
+	var out = profile.duplicate(true); out["settings"] = settings; _write_json(profile_path, out)
 func save_presets() -> void: _write_json(PRESET_PATH, presets)
 func set_setting(key: String, value) -> void:
 	settings[key] = value; save_profile(); settings_changed.emit()

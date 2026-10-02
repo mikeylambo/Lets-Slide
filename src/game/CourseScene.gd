@@ -5,6 +5,10 @@ var course: CourseData
 ## Tooling hooks (dev playtest harness). Gameplay leaves both at defaults.
 var params_override: MotorParams = null
 var show_results = true
+var rival_replay: Replay = null      ## race this recorded run as a live rival
+var watch_replay: Replay = null      ## start by watching this replay
+var rival: SlideBody
+var tech: TechTracker
 var slider: SlideBody
 var camera: SlideCamera
 var run: RunController
@@ -33,6 +37,13 @@ func _ready() -> void:
 	WorldKit.add_shelf_architecture(self,_built["builder"],course.region_index)
 
 	add_child(slider)
+	# The rival sits right after the player in the tree (before the run
+	# controller) so per-tick ordering matches how the replay was recorded.
+	if rival_replay and rival_replay.course_id == course.id:
+		rival = SlideBody.new(); rival.is_player = false
+		rival.ghost_tint = Color(1.0, 0.36, 0.86, 0.42)
+		rival.params = MotorParams.new(); rival.params.from_dict(rival_replay.params)
+		add_child(rival)
 	var start_pos:Vector3=_built["start_position"]; var start_yaw:float=float(_built["start_yaw"])
 	slider.global_position=start_pos; slider.state.reset(start_pos,start_yaw); slider.set_spawn(start_pos,start_yaw)
 
@@ -49,6 +60,11 @@ func _ready() -> void:
 	_ui.layer=8; add_child(_ui); hud=HUD.new(); _ui.add_child(hud)
 	run=RunController.new(); add_child(run); run.run_restarted.connect(_on_run_restarted)
 	run.setup(course,_built,slider,ghost,flow); audio.bind_run(run); hud.setup(run,slider,ghost)
+	if rival: run.setup_rival(rival, rival_replay)
+	tech = TechTracker.new(); add_child(tech); tech.setup(slider, run)
+	tech.discovered.connect(func(_id, info): hud.announce("TECH DISCOVERED  ·  %s" % info["name"], Color(1.0, 0.82, 0.3)))
+	run.badge_found.connect(func(_c, first): hud.announce("CHICK BADGE FOUND" if first else "CHICK BADGE", Color(1.0, 0.86, 0.22)))
+	if watch_replay: run.play_replay(watch_replay)
 	_juice=JuiceDirector.new(); add_child(_juice); _juice.setup(slider,flow,run)
 	run.run_finished.connect(_on_run_finished)
 	if Game.current_mode==Game.Mode.SURVIVAL: run.respawned.connect(_on_survival_respawn)
@@ -61,7 +77,7 @@ func _process(delta:float)->void:
 
 func _unhandled_input(event:InputEvent)->void:
 	if event.is_action_pressed("pause_menu"): _toggle_pause(); get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("retry") and run.state!=RunController.State.FINISHED: run.retry(); get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("retry") and run.state!=RunController.State.FINISHED: restart(); get_viewport().set_input_as_handled()
 	elif Game.dev_tools and event.is_action_pressed("toggle_model"): slider.toggle_model(); get_viewport().set_input_as_handled()
 	elif Game.dev_tools and event.is_action_pressed("toggle_lab"): Main.instance.open_lab(); get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and event.keycode==KEY_F2: hud.toggle_telemetry(); get_viewport().set_input_as_handled()
@@ -89,6 +105,20 @@ func _on_run_finished(result: Dictionary) -> void:
 		await get_tree().create_timer(0.55).timeout
 		Main.instance.next_mode_course()
 		return
+	if Game.current_mode == Game.Mode.MARATHON and bool(result.get("finished", false)) and not result.get("watched", false):
+		var m = Game.marathon
+		m["total"] = float(m["total"]) + float(result["time"])
+		m["splits"].append(float(m["total"]))
+		m["index"] = int(m["index"]) + 1
+		if int(m["index"]) < Courses.region_courses(int(m["region"])).size():
+			hud.announce("%s  ·  %s" % [course.title, RunController.format_time(float(m["total"]))], UiKit.LINE)
+			await get_tree().create_timer(0.55).timeout
+			Main.instance.next_mode_course()
+			return
+		var prev = Game.marathon_best(int(m["region"]))
+		result["marathon_total"] = m["total"]
+		result["marathon_previous"] = prev
+		result["marathon_new_best"] = Game.submit_marathon(int(m["region"]), float(m["total"]))
 	_results = ResultsScreen.new()
 	_results.result = result
 	_results.course = course
@@ -104,7 +134,15 @@ func _on_watch(r: Replay)->void:
 
 func _on_retry()->void:
 	if _results and is_instance_valid(_results): _results.queue_free(); _results=null
-	run.retry()
+	restart()
+
+## Retry semantics per mode: a Region Run restarts from its first course so a
+## cumulative time is always one unbroken attempt.
+func restart()->void:
+	if Game.current_mode == Game.Mode.MARATHON:
+		Main.instance.start_marathon(int(Game.marathon["region"]))
+	else:
+		run.retry()
 
 func _toggle_inspector()->void:
 	if _inspector and is_instance_valid(_inspector): _inspector.queue_free(); _inspector=null; return
@@ -115,13 +153,13 @@ func _toggle_inspector()->void:
 
 func _on_inspector_rebuild(spec: Array) -> void:
 	course.spec = spec.duplicate(true)
-	Main.instance.play_course(course, params_override)
+	Main.instance.play_course(course, params_override, {"rival": rival_replay})
 
 func _toggle_pause()->void:
 	if _pause and is_instance_valid(_pause): _close_pause(); return
 	if run.state==RunController.State.FINISHED:return
 	get_tree().paused=true; run.pause_run(); _pause=PauseMenu.new(); _pause.process_mode=Node.PROCESS_MODE_ALWAYS
-	_pause.resume_requested.connect(_close_pause); _pause.retry_requested.connect(func():_close_pause();run.retry())
+	_pause.resume_requested.connect(_close_pause); _pause.retry_requested.connect(func():_close_pause();restart())
 	_pause.exit_requested.connect(func():get_tree().paused=false;Main.instance.quit_to_menu()); _ui.add_child(_pause)
 func _close_pause()->void:
 	if _pause and is_instance_valid(_pause):_pause.queue_free();_pause=null

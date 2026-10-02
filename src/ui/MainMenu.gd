@@ -12,6 +12,8 @@ func _ready() -> void:
 	var daily = UiKit.button("DAILY DESCENT"); daily.pressed.connect(func(): Game.set_mode(Game.Mode.DAILY); Main.instance.start_daily()); buttons.add_child(daily)
 	if Game.dev_tools:
 		var lab = UiKit.button("MOVEMENT LAB"); lab.pressed.connect(func(): Main.instance.open_lab()); buttons.add_child(lab)
+	var codes = UiKit.button("RUN CODES"); codes.pressed.connect(func(): Main.instance.show_run_codes()); buttons.add_child(codes)
+	var codex = UiKit.button("CODEX"); codex.pressed.connect(func(): Main.instance.show_codex()); buttons.add_child(codex)
 	var records = UiKit.button("RECORDS"); records.pressed.connect(func(): Main.instance.show_records()); buttons.add_child(records)
 	var boards = UiKit.button("LEADERBOARDS"); boards.pressed.connect(func(): Main.instance.show_leaderboards()); buttons.add_child(boards)
 	var rider = UiKit.button("RIDER"); rider.pressed.connect(func(): Main.instance.show_cosmetics()); buttons.add_child(rider)
@@ -20,6 +22,7 @@ func _ready() -> void:
 	col.add_child(UiKit.spacer(20))
 	var stats = HBoxContainer.new(); stats.add_theme_constant_override("separation",26)
 	stats.add_child(UiKit.label("MEDALS  %d / 25" % Game.medal_total(), UiKit.BODY, UiKit.WARN))
+	stats.add_child(UiKit.label("BADGES  %d / %d" % [Game.badge_total(), Courses.all().size()], UiKit.BODY, Color(1.0, 0.86, 0.22)))
 	stats.add_child(UiKit.label("RUNS  %d" % int(Game.profile["total_runs"]), UiKit.BODY, UiKit.TEXT_DIM))
 	stats.add_child(UiKit.label("DISTANCE  %.1f km" % (float(Game.profile["total_distance"])/1000.0), UiKit.BODY, UiKit.TEXT_DIM)); col.add_child(stats)
 	play.grab_focus()

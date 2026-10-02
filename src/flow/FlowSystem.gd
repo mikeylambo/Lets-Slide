@@ -120,7 +120,7 @@ func _near_geometry() -> bool:
 	var origin = slider.global_position + Vector3.UP * 0.45
 	var space = slider.get_world_3d().direct_space_state
 	for direction in [side, -side]:
-		var query = PhysicsRayQueryParameters3D.create(origin, origin + direction * GRAZE_DISTANCE)
+		var query = PhysicsRayQueryParameters3D.create(origin, origin + direction * GRAZE_DISTANCE, SlideBody.WORLD_MASK)
 		query.exclude = [slider.get_rid()]
 		if not space.intersect_ray(query).is_empty():
 			return true
@@ -136,7 +136,7 @@ func _air_tracks_landable_surface() -> bool:
 	for _i in 18:
 		var next = p + v * step
 		v.y -= slider.params.gravity * step
-		var query = PhysicsRayQueryParameters3D.create(p, next)
+		var query = PhysicsRayQueryParameters3D.create(p, next, SlideBody.WORLD_MASK)
 		query.exclude = [slider.get_rid()]
 		if not space.intersect_ray(query).is_empty():
 			return true
