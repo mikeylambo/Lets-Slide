@@ -12,6 +12,7 @@ func _ready() -> void:
 	var daily = UiKit.button("DAILY DESCENT"); daily.pressed.connect(func(): Game.set_mode(Game.Mode.DAILY); Main.instance.start_daily()); buttons.add_child(daily)
 	if Game.dev_tools:
 		var lab = UiKit.button("MOVEMENT LAB"); lab.pressed.connect(func(): Main.instance.open_lab()); buttons.add_child(lab)
+	var online = UiKit.button("ONLINE"); online.pressed.connect(func(): Main.instance.show_lobby()); buttons.add_child(online)
 	var courses = UiKit.button("COURSES"); courses.pressed.connect(func(): Main.instance.show_courses()); buttons.add_child(courses)
 	var codes = UiKit.button("RUN CODES"); codes.pressed.connect(func(): Main.instance.show_run_codes()); buttons.add_child(codes)
 	var codex = UiKit.button("CODEX"); codex.pressed.connect(func(): Main.instance.show_codex()); buttons.add_child(codex)
