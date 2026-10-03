@@ -64,4 +64,4 @@ func _process(delta: float) -> void:
 	if environment_node == null or environment_node.environment == null:
 		return
 	var env = environment_node.environment
-	env.glow_intensity = 0.55 + float(_tier) * 0.14 * float(Game.settings.get("flow_effects", 1.0))
+	env.glow_intensity = float(env.get_meta("glow_base", 0.55)) + float(_tier) * 0.14 * float(Game.settings.get("flow_effects", 1.0))

@@ -6,6 +6,7 @@ extends RefCounted
 
 static func build(course: CourseData, author_avg_speed: float = 32.0) -> Dictionary:
 	var builder = TrackBuilder.new()
+	builder.theme = RegionTheme.of(course.region_index)
 	var start_height = 260.0 + float(course.region_index) * 170.0 + (120.0 if course.is_descent else 0.0)
 	var root = builder.build(course.spec, Vector3(0.0, start_height, 0.0), 0.0, author_avg_speed)
 	root.name = course.id

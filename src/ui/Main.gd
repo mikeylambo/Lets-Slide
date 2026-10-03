@@ -43,6 +43,9 @@ func _ready() -> void:
 	if "--presentation-test" in args:
 		add_child(load("res://tests/PresentationTests.gd").new())
 		return
+	if Array(args).any(func(a): return str(a).begins_with("--world-shots=")):
+		add_child(load("res://tests/WorldShots.gd").new())
+		return
 	if Array(args).any(func(a): return str(a).begins_with("--screen-tour=")):
 		add_child(load("res://tests/ScreenTour.gd").new())
 		return

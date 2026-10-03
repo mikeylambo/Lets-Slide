@@ -25,7 +25,9 @@ func _ready() -> void:
 	var m = StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.vertex_color_use_as_albedo = true
-	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	# Mixed, not additive: the Shelf is a daylit world, and additive light
+	# over a bright deck burns to white and hides the trail's colour.
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
 	m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.disable_receive_shadows = true

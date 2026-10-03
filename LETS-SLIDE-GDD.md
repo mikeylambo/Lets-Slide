@@ -395,6 +395,13 @@ the structure looks intentional. No cutscenes, no narrator.
 
 ## 12. Art direction
 
+> **Superseded in part (world pass, Oct 2026).** The void-and-neon look below
+> was the prototype style. The game now has a rigged rider (Ed) and a daylit
+> Shelf: stone and glass terraces above a cloud sea, one palette and landmark
+> per region. The legibility rules survive unchanged: surface hue reads at a
+> glance, motion carries the frame, and Flow still drives the palette.
+> Current pipeline and workflow: `WORLD-DESIGN.md`.
+
 **Error-absorbent by construction.** The style is chosen so that the things that
 are hard to get right — anatomy, faces, realistic materials, animation — do not
 appear in the game at all.

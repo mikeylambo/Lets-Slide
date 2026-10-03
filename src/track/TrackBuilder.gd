@@ -16,6 +16,11 @@ var beat_map: Array[float] = []
 var author_avg_speed: float = 32.0
 var root: Node3D
 var _tris: Array[Dictionary] = []
+var _skirt = PackedVector3Array()     ## visual-only deck underside, as triangles
+var _skirt_n = PackedVector3Array()
+## Region look (RegionTheme): deck stone, beat-grid bands, glass edges.
+var theme: Dictionary = RegionTheme.of(0)
+const DECK_DEPTH = 2.2
 var _lines = PackedVector3Array()
 var _line_colors = PackedColorArray()
 
@@ -28,6 +33,7 @@ func build(spec: Array, start_pos: Vector3 = Vector3.ZERO, start_yaw: float = 0.
 	parallel_routes.clear()
 	beat_map.clear()
 	_tris.clear()
+	_skirt = PackedVector3Array(); _skirt_n = PackedVector3Array()
 	_lines = PackedVector3Array()
 	_line_colors = PackedColorArray()
 	total_length = 0.0
@@ -55,6 +61,7 @@ func build(spec: Array, start_pos: Vector3 = Vector3.ZERO, start_yaw: float = 0.
 		bar_cursor += seg_bars
 
 	_flush_geometry(root, "MainLine")
+	_flush_skirt(root, "MainLine")
 	_flush_lines(root)
 	_decorate_segments()
 	return root
@@ -72,6 +79,8 @@ func add_parallel_route(from_dist: float, to_dist: float, lateral: float, height
 	_tris.clear()
 	var span: float = maxf(to_dist - from_dist, 0.001)
 	var prev = PackedVector3Array()
+	var prev_d = 0.0
+	var prev_u = Vector3.UP
 	for i in picked.size():
 		var s: Dictionary = picked[i]
 		var t: float = (float(s["dist"]) - from_dist) / span
@@ -85,10 +94,14 @@ func add_parallel_route(from_dist: float, to_dist: float, lateral: float, height
 			var u: float = float(j) / float(CROSS - 1) * 2.0 - 1.0
 			cross.append(centre + s["r"] * (u * width * 0.5))
 		if i > 0:
-			_stitch(prev, cross, surface)
+			_stitch(prev, cross, surface, prev_d, float(s["dist"]))
+			_add_skirt(prev, cross, prev_u, s["u"], 0.7)
 			_add_rail(prev, cross, SurfaceKind.color_of(surface))
 		prev = cross
+		prev_d = float(s["dist"])
+		prev_u = s["u"]
 	_flush_geometry(root, name_hint)
+	_flush_skirt(root, name_hint)
 	_flush_lines(root)
 
 func sample_at(dist: float) -> Dictionary:
@@ -136,6 +149,8 @@ func _emit_segment(frame: Dictionary, seg: Dictionary) -> Dictionary:
 	var start_width: float = frame["width"]
 	var start_yaw: float = frame["yaw"]
 	var prev_cross = PackedVector3Array()
+	var prev_d = 0.0
+	var prev_u = Vector3.UP
 
 	for i in range(steps + 1):
 		var t: float = float(i) / float(steps)
@@ -206,9 +221,13 @@ func _emit_segment(frame: Dictionary, seg: Dictionary) -> Dictionary:
 						lift += wall * kk * kk
 				cross.append(pos + r * lateral + u * lift)
 		if not prev_cross.is_empty():
-			_stitch(prev_cross, cross, surface)
+			_stitch(prev_cross, cross, surface, prev_d, total_length)
+			if not is_pipe:
+				_add_skirt(prev_cross, cross, prev_u, u, DECK_DEPTH)
 			_add_rail(prev_cross, cross, SurfaceKind.color_of(surface))
 		prev_cross = cross
+		prev_d = total_length
+		prev_u = u
 
 	if kind == "ramp":
 		frame["pitch"] = start_pitch
@@ -318,12 +337,36 @@ func _frame_basis(frame: Dictionary) -> Dictionary:
 		u = f.cross(r).normalized()
 	return {"f": f, "r": r, "u": u}
 
-func _stitch(a: PackedVector3Array, b: PackedVector3Array, surface: int) -> void:
+## da/db: distance along the course of rows a and b (the deck's V coordinate).
+func _stitch(a: PackedVector3Array, b: PackedVector3Array, surface: int, da: float = 0.0, db: float = 0.0) -> void:
 	if a.size() != b.size():
 		return
+	var n = float(a.size() - 1)
 	for i in range(a.size() - 1):
-		_tris.append({"v": [a[i], b[i], a[i + 1]], "s": surface})
-		_tris.append({"v": [a[i + 1], b[i], b[i + 1]], "s": surface})
+		var u0 = float(i) / n; var u1 = float(i + 1) / n
+		_tris.append({"v": [a[i], b[i], a[i + 1]], "s": surface, "uv": [Vector2(u0, da), Vector2(u0, db), Vector2(u1, da)]})
+		_tris.append({"v": [a[i + 1], b[i], b[i + 1]], "s": surface, "uv": [Vector2(u1, da), Vector2(u0, db), Vector2(u1, db)]})
+
+## The deck's thickness: side walls hanging from both edges and a soffit, so
+## the ribbon reads as a built structure. Visual only; never collides.
+func _add_skirt(a: PackedVector3Array, b: PackedVector3Array, ua: Vector3, ub: Vector3, depth: float) -> void:
+	var last = a.size() - 1
+	var a0 = a[0]; var a1 = a[last]; var b0 = b[0]; var b1 = b[last]
+	var a0d = a0 - ua * depth; var a1d = a1 - ua * depth
+	var b0d = b0 - ub * depth; var b1d = b1 - ub * depth
+	var across = (a1 - a0).normalized()
+	_quad(a0, b0, b0d, a0d, -across)   # left wall
+	_quad(b1, a1, a1d, b1d, across)    # right wall
+	_quad(a0d, b0d, b1d, a1d, -ua)     # soffit
+
+## Two triangles facing `outward`, wound clockwise (Godot's front face) from
+## that side so they light from the side the player sees.
+func _quad(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, outward: Vector3) -> void:
+	var order = [p0, p1, p2, p0, p2, p3]
+	if (p1 - p0).cross(p2 - p0).dot(outward) > 0.0:
+		order = [p0, p2, p1, p0, p3, p2]
+	for v in order:
+		_skirt.append(v); _skirt_n.append(outward)
 
 func _add_rail(a: PackedVector3Array, b: PackedVector3Array, c: Color) -> void:
 	var lift = Vector3.UP * RAIL_LIFT
@@ -347,7 +390,7 @@ func _flush_geometry(parent: Node3D, node_name: String) -> void:
 		var s: int = tri["s"]
 		if not by_surface.has(s):
 			by_surface[s] = []
-		by_surface[s].append(tri["v"])
+		by_surface[s].append(tri)
 	_tris.clear()
 	for s in by_surface.keys():
 		var tris: Array = by_surface[s]
@@ -355,12 +398,19 @@ func _flush_geometry(parent: Node3D, node_name: String) -> void:
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var col: Color = SurfaceKind.color_of(s)
 		var faces = PackedVector3Array()
-		for v in tris:
+		for tri in tris:
+			var v: Array = tri["v"]; var uv: Array = tri["uv"]
 			var n: Vector3 = (v[1] - v[0]).cross(v[2] - v[0]).normalized()
-			for k in 3:
+			# Godot treats clockwise as the front face; the deck is authored
+			# counter-clockwise from above, so render it reversed (else the
+			# lit side is the underside and the track renders black). The
+			# collision faces keep the authored order the motor relies on.
+			for k in [0, 2, 1]:
 				st.set_color(col)
 				st.set_normal(n)
+				st.set_uv(uv[k])
 				st.add_vertex(v[k])
+			for k in 3:
 				faces.append(v[k])
 		st.index()
 		var body = StaticBody3D.new()
@@ -368,7 +418,7 @@ func _flush_geometry(parent: Node3D, node_name: String) -> void:
 		body.set_meta("surface_class", s)
 		var mi = MeshInstance3D.new()
 		mi.mesh = st.commit()
-		mi.material_override = _track_material()
+		mi.material_override = _deck_material()
 		body.add_child(mi)
 		var shape = ConcavePolygonShape3D.new()
 		shape.backface_collision = true
@@ -377,6 +427,22 @@ func _flush_geometry(parent: Node3D, node_name: String) -> void:
 		cs.shape = shape
 		body.add_child(cs)
 		parent.add_child(body)
+
+func _flush_skirt(parent: Node3D, node_name: String) -> void:
+	if _skirt.is_empty():
+		return
+	var arr = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = _skirt
+	arr[Mesh.ARRAY_NORMAL] = _skirt_n
+	var mesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	var mi = MeshInstance3D.new()
+	mi.name = node_name + "_Underside"
+	mi.mesh = mesh
+	mi.material_override = _skirt_material()
+	parent.add_child(mi)
+	_skirt = PackedVector3Array(); _skirt_n = PackedVector3Array()
 
 func _flush_lines(parent: Node3D) -> void:
 	if _lines.is_empty():
@@ -396,13 +462,26 @@ func _flush_lines(parent: Node3D) -> void:
 	_lines = PackedVector3Array()
 	_line_colors = PackedColorArray()
 
-static func _track_material() -> StandardMaterial3D:
-	var m = StandardMaterial3D.new()
-	m.vertex_color_use_as_albedo = true
-	m.roughness = 0.66
-	m.metallic = 0.08
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return m
+const DECK_SHADER = preload("res://src/track/shaders/deck.gdshader")
+var _deck_mat: ShaderMaterial
+var _skirt_mat: StandardMaterial3D
+
+func _deck_material() -> ShaderMaterial:
+	if _deck_mat == null:
+		_deck_mat = ShaderMaterial.new()
+		_deck_mat.shader = DECK_SHADER
+		_deck_mat.set_shader_parameter("stone", theme["stone"])
+		_deck_mat.set_shader_parameter("stone_mix", float(theme["deck_mix"]))
+		_deck_mat.set_shader_parameter("bar_metres", Tempo.bar_meters(author_avg_speed))
+	return _deck_mat
+
+func _skirt_material() -> StandardMaterial3D:
+	if _skirt_mat == null:
+		_skirt_mat = StandardMaterial3D.new()
+		_skirt_mat.albedo_color = (theme["stone_dark"] as Color).lerp(theme["stone"], 0.35)
+		_skirt_mat.roughness = 0.85
+		_skirt_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _skirt_mat
 
 static func _line_material() -> StandardMaterial3D:
 	var m = StandardMaterial3D.new()

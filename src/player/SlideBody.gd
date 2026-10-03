@@ -79,7 +79,7 @@ func _build_visual() -> void:
 	var palette = Game.cosmetic_palette()
 	if ghost_tint.a > 0.0:
 		palette = {"board": ghost_tint, "core": ghost_tint.lightened(0.25)}
-	_board.material_override = _neon_material(palette["board"], 1.8)
+	_board.material_override = _neon_material(palette["board"], 0.7)
 	_visual.add_child(_board)
 
 	rider = RiderModel.new()
@@ -103,7 +103,7 @@ func _neon_material(c: Color, energy: float) -> StandardMaterial3D:
 		m.emission_energy_multiplier = energy * 0.6
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		return m
-	m.albedo_color = c.darkened(0.55)
+	m.albedo_color = c.darkened(0.45)
 	m.emission_enabled = true
 	m.emission = c
 	m.emission_energy_multiplier = energy
@@ -359,7 +359,7 @@ func set_flow_tier(tier: int) -> void:
 		(_trail as SpeedTrail).flow_tier = tier
 	var board_mat = _board.material_override as StandardMaterial3D if _board else null
 	if board_mat:
-		board_mat.emission_energy_multiplier = 1.8 + float(tier) * 0.55
+		board_mat.emission_energy_multiplier = 0.7 + float(tier) * 0.35
 	if rider:
 		rider.set_glow(0.6 + float(tier) * 0.9)
 
