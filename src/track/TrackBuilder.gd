@@ -39,6 +39,7 @@ func build(spec: Array, start_pos: Vector3 = Vector3.ZERO, start_yaw: float = 0.
 		"pitch": deg_to_rad(float(first.get("slope", 0.0))),
 		"bank": 0.0,
 		"width": float(first.get("width", 14.0)),
+		"bowl": 0.0, "ridge": 0.0, "wall": 0.0,
 	}
 	var bar_cursor = 0.0
 	for raw in spec:
@@ -75,7 +76,10 @@ func add_parallel_route(from_dist: float, to_dist: float, lateral: float, height
 		var s: Dictionary = picked[i]
 		var t: float = (float(s["dist"]) - from_dist) / span
 		var blend: float = sin(clampf(t, 0.0, 1.0) * PI)
-		var centre: Vector3 = s["pos"] + s["r"] * (lateral * blend) + s["u"] * (height * blend)
+		# The route holds its lane and rises out of the main surface: its ends
+		# tuck just under the deck and its long edges run parallel to travel,
+		# so a rider rolls onto it from above and can only graze its sides.
+		var centre: Vector3 = s["pos"] + s["r"] * lateral + s["u"] * (height * blend - 0.3 * (1.0 - blend))
 		var cross = PackedVector3Array()
 		for j in CROSS:
 			var u: float = float(j) / float(CROSS - 1) * 2.0 - 1.0
@@ -114,9 +118,14 @@ func _emit_segment(frame: Dictionary, seg: Dictionary) -> Dictionary:
 	var target_pitch: float = deg_to_rad(float(seg.get("slope", 0.0)))
 	var target_bank: float = deg_to_rad(float(seg.get("bank", 0.0)))
 	var target_width: float = float(seg.get("width", frame["width"]))
-	var bowl: float = float(seg.get("bowl", 0.0))
-	var wall: float = float(seg.get("wall", 0.0))
-	var ridge: float = float(seg.get("ridge", 0.0))
+	# Cross-section profile eases from the previous segment's shape, like bank
+	# and width, so a bowl or wall never starts as a step across the track.
+	var start_bowl: float = frame["bowl"]
+	var start_wall: float = frame["wall"]
+	var start_ridge: float = frame["ridge"]
+	var target_bowl: float = float(seg.get("bowl", 0.0))
+	var target_wall: float = float(seg.get("wall", 0.0))
+	var target_ridge: float = float(seg.get("ridge", 0.0))
 	var launch: float = deg_to_rad(float(seg.get("launch", 0.0)))
 	var crest: float = deg_to_rad(float(seg.get("crest", 0.0)))
 	var compression: float = deg_to_rad(float(seg.get("compression", 0.0)))
@@ -154,6 +163,12 @@ func _emit_segment(frame: Dictionary, seg: Dictionary) -> Dictionary:
 			bank_now = start_bank + target_bank * t
 		frame["bank"] = bank_now
 		frame["width"] = lerpf(start_width, target_width, ease)
+		# The profile settles in the first third so the verb keeps its shape.
+		var shape_t: float = smoothstep(0.0, 0.35, t)
+		var bowl: float = lerpf(start_bowl, target_bowl, shape_t)
+		var wall: float = lerpf(start_wall, target_wall, shape_t)
+		var ridge: float = lerpf(start_ridge, target_ridge, shape_t)
+		frame["bowl"] = bowl; frame["wall"] = wall; frame["ridge"] = ridge
 
 		var basis_data = _frame_basis(frame)
 		var f: Vector3 = basis_data["f"]

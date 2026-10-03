@@ -8,11 +8,11 @@ id = "course_03"
 title = "SURFACE READ"
 subtitle = "Learning the mountain · patch"
 course_index = 2
-author_time = 37.07586206896552
-gold_time = 40.041931034482765
-silver_time = 45.232551724137934
-bronze_time = 53.760000000000005
-par_score = 4320
+author_time = 36.92
+gold_time = 39.8736
+silver_time = 45.0424
+bronze_time = 53.534
+par_score = 2430
 spec = [{
 "bars": 4.0,
 "kind": "straight",
@@ -63,3 +63,4 @@ spec = [{
 }]
 form = "sawtooth"
 signature_moment = "Three surface bands turn friction into a readable line choice."
+medal_source = "probe"

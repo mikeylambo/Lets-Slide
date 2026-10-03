@@ -8,11 +8,11 @@ id = "course_04"
 title = "OPEN THROTTLE"
 subtitle = "Learning the mountain · tunnel"
 course_index = 3
-author_time = 37.07586206896552
-gold_time = 40.041931034482765
-silver_time = 45.232551724137934
-bronze_time = 53.760000000000005
-par_score = 4320
+author_time = 33.35
+gold_time = 36.018
+silver_time = 40.687
+bronze_time = 48.3575
+par_score = 3330
 spec = [{
 "bars": 4.0,
 "kind": "straight",
@@ -54,3 +54,4 @@ spec = [{
 }]
 form = "front_loaded"
 signature_moment = "A tunnel crest hides the landing until commitment, then opens into the void."
+medal_source = "probe"

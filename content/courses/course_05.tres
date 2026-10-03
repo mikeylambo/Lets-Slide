@@ -9,11 +9,11 @@ title = "THRESHOLD DESCENT"
 subtitle = "Learning the mountain · crest"
 course_index = 4
 is_descent = true
-author_time = 74.15172413793104
-gold_time = 80.08386206896553
-silver_time = 90.46510344827587
-bronze_time = 107.52000000000001
-par_score = 8640
+author_time = 66.17
+gold_time = 71.4636
+silver_time = 80.7274
+bronze_time = 95.9465
+par_score = 6210
 spec = [{
 "bars": 6.0,
 "kind": "straight",
@@ -82,3 +82,4 @@ spec = [{
 }]
 total_bars = 64.0
 signature_moment = "Four parallel lines stay visible together before one enormous final release."
+medal_source = "probe"

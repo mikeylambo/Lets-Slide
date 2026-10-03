@@ -8,11 +8,11 @@ id = "course_02"
 title = "TWO WAYS DOWN"
 subtitle = "Learning the mountain · split"
 course_index = 1
-author_time = 23.17241379310345
-gold_time = 25.026206896551727
-silver_time = 28.270344827586207
-bronze_time = 33.6
-par_score = 2700
+author_time = 24.27
+gold_time = 26.2116
+silver_time = 29.609399999999997
+bronze_time = 35.1915
+par_score = 1260
 spec = [{
 "bars": 3.0,
 "kind": "straight",
@@ -53,3 +53,4 @@ spec = [{
 total_bars = 20.0
 form = "late_spike"
 signature_moment = "A high split only opens if speed was protected through the preceding bank."
+medal_source = "probe"

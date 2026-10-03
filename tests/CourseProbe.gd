@@ -27,6 +27,7 @@ var _reported = false
 var _index = 0
 var _furthest = 0.0
 var _stall_ticks = 0
+var _launched = false
 var _segment_index = -1
 var _segment_entry_speed = 0.0
 var _last_grounded = false
@@ -116,6 +117,7 @@ func _nearest_index(pos: Vector3, from: int) -> int:
 
 func _on_respawn() -> void:
 	_respawns += 1
+	_launched = false   # respawns restart from a standstill
 	if _respawns <= 6:
 		var s = _scene.slider.state
 		var i = _scan_all(_fail_pos)
@@ -154,8 +156,11 @@ func _physics_process(delta: float) -> void:
 		_samples += 1
 		if not s.grounded:
 			_air += delta
-		elif s.speed < 1.5:
+		elif s.speed < 1.5 and _launched:
 			_stall_ticks += 1
+		# The standing start from GO is not a stall.
+		if s.speed >= 3.0:
+			_launched = true
 		if s.grounded or _fail_grounded:
 			_fail_pos = _scene.slider.global_position
 			_fail_speed = s.speed

@@ -6,10 +6,10 @@
 script = ExtResource("1_e2af0")
 title = "FALL LESSON"
 subtitle = "Learning the mountain · crest"
-author_time = 23.17241379310345
-gold_time = 25.026206896551727
-silver_time = 28.270344827586207
-bronze_time = 33.6
+author_time = 25.48
+gold_time = 27.518400000000003
+silver_time = 31.0856
+bronze_time = 36.946
 par_score = 0
 mastery_count = 0
 spec = [{
@@ -31,3 +31,4 @@ spec = [{
 }]
 total_bars = 20.0
 signature_moment = "The first natural crest teaches that terrain is the jump button."
+medal_source = "probe"
